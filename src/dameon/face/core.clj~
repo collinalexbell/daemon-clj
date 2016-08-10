@@ -1,0 +1,54 @@
+(ns dameon.face.core
+  (require
+   [dameon.face.emotion-animation :as animation]
+   [dameon.settings :as settings]
+   [quil.core :as q]
+   [quil.middleware :as m]))
+
+(def width settings/width)
+(def height settings/height)
+
+(def available-emotions
+  [:happy :sad :determined :confused :exuberant])
+
+(defn load-emotions []
+  (merge (map
+    (fn [emot] {emot (animation/new emot)})
+    available-emotions)))
+
+(defn setup []
+  (q/frame-rate 1)
+  (q/background 255)
+  (let [anim (q/load-image "face_animations/Happy/neutral_to_emotion.png")]
+    (q/resize anim  (* 4 width) height)
+    {:x 1 :animation anim :emotions (load-emotions) :cur-index 0}))
+
+(defn update-state [state]
+  (q/frame-rate 1)
+  (assoc state :cur-index (mod (+ 1 (state :cur-index)) 4)))
+
+(defn draw [state]
+  (q/background 0)
+  (q/image (nth (get-in state [:emotions :happy :frames :emotion-loop]) (state :cur-index)) 0 0)
+  (q/fill 255)
+  (q/text (str state) 20 20))
+  
+
+(q/defsketch dameon-face
+  :size [width height]
+  :setup setup
+  :update update-state
+  :draw draw
+  :middleware [m/fun-mode])
+
+
+
+
+
+
+
+
+
+
+
+

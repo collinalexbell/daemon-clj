@@ -1,0 +1,64 @@
+(ns dameon.face.emotion-animation
+  (require [quil.core :as q]))
+
+(def animation-folder "face_animations/")
+
+(def emotion-keyword-to-folder-name
+  {:happy      "Happy/"
+   :sad        "Sad/"
+   :determined "Determined/"
+   :confused   "Confused/"
+   :exuberant  "Exuberant/"})
+
+(defn get-full-file-paths
+  "Generate the required file paths for this animation dir. 
+  The path must be a path to a folder that contains: 
+  'emotion.png', 'neutral_to_emotion.png', and 'emotion_to_neutral.png'"
+  [sprite-file-dir]
+    (let [corrected-base-path
+        (if (not (= (last sprite-file-dir) \/))
+          (str sprite-file-dir "/")
+          sprite-file-dir)]
+
+    {:emotion-loop-path
+     (str corrected-base-path "emotion.png") 
+
+     :neutral-to-emotion-path
+     (str corrected-base-path "neutral_to_emotion.png")
+
+     :emotion-to-neutral-path
+     (str corrected-base-path "emotion_to_neutral.png")}))
+
+(defn load-sprite-files
+  "Returns a map with the loaded sprite files that were loaded using quill.core/image-load"
+  [emotion-name]
+  (map
+   (fn [l] {(first l) (q/load-image (last l))})
+   (get-full-file-paths
+    (str
+     animation-folder 
+     (emotion-keyword-to-folder-name emotion-name)))))
+
+;(q/load-image "face_animations/Sad/emotion.png")
+;(q/load-image "~/dameon/blue_background.png")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

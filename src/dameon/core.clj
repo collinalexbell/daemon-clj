@@ -1,6 +1,30 @@
-(ns dameon.core)
+(ns dameon.core
+  (require [dameon.voice.core :as voice]
+           [dameon.face.core :as face]))
 
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
+
+(defn greet [name]
+  (face/change-emotion :exuberant)
+  (voice/speak (str "Hello " name ))
+  (voice/speak (str "How are you?"))
+  (face/change-emotion :happy))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -28,7 +28,7 @@
     {:x 1 :animation anim :emotions (load-emotions) :cur-index 0 :transition-emotion :happy :cur-emotion :happy}))
 
 (defn update-state [state]
-  (q/frame-rate 7)
+  (q/frame-rate 10)
   (if (not (nil? @transitioner))
     (let [transition-emotion @transitioner]
       (do
@@ -53,7 +53,7 @@
 (defn draw [state]
   ;(go (q/text (<! c) 20 40))
   (q/background 0)
-  (q/image (animation/get-cur-frame (get-in state [:emotions (state :cur-emotion)]))  0 0 200 200)
+  (q/image (animation/get-cur-frame (get-in state [:emotions (state :cur-emotion)]))  0 0)
   (q/fill 255)
   ;(q/text (str state) 20 20)
   )

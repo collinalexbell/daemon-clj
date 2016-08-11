@@ -9,6 +9,13 @@
   (voice/speak (str "How are you?"))
   (face/change-emotion :happy))
 
+(defn greet-blocking [name]
+  (face/change-emotion :exuberant :block true)
+  (voice/speak (str "Hello " name ))
+  (voice/speak (str "How are you?"))
+  (face/change-emotion :happy))
+
+
 
 
 

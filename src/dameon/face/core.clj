@@ -9,6 +9,8 @@
 
 (def transitioner (ref nil))
 
+(def in-main-loop? (ref false))
+
 (def width settings/width)
 (def height settings/height)
 
@@ -39,9 +41,12 @@
                   (animation/transition-out-of (get-in state [:emotions (state :cur-emotion)])))
         :transition-emotion transition-emotion)))
     (if (not ((get-in state [:emotions (state :cur-emotion)]) :finished))
-     (assoc-in state
-             [:emotions (state :cur-emotion)]
-             (animation/next-frame (get-in state [:emotions (state :cur-emotion)])))
+      (do
+        (if (= (get-in state [:emotions (state :cur-emotion) :cur-animation]) :emotion-loop)
+          (dosync (ref-set in-main-loop? true)))
+        (assoc-in state
+                [:emotions (state :cur-emotion)]
+                (animation/next-frame (get-in state [:emotions (state :cur-emotion)]))))
      (assoc
       (assoc-in state
                 [:emotions (state :transition-emotion)]
@@ -69,16 +74,15 @@
 
 
 
-(defn change-emotion [emotion]
+(defn change-emotion
+  "Function used to change the emotion displayed of the face. 
+   If keyword argument :block is set true, then the function will wait until the animation is in the :emotion-loop to return"
+  [emotion & {:keys [block] :or {block false}}]
+  (dosync (ref-set in-main-loop? false))
   (if (> (.indexOf available-emotions emotion) -1)
     (dosync (ref-set transitioner emotion))
-    (throw (Exception. "This emotion is not available"))))
-
-
-
-
-
-
-
+    (throw (Exception. "This emotion is not available")))
+  (if block
+    (while (not @in-main-loop?))))
 
 

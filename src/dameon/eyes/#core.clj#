@@ -1,0 +1,110 @@
+(ns dameon.eyes.core
+  (require [quil.core :as q]))
+
+(import '[org.opencv.core MatOfInt MatOfByte MatOfRect Mat CvType Size]
+        '[org.opencv.imgcodecs Imgcodecs]
+        '[org.opencv.imgproc Imgproc]
+        '[org.opencv.videoio VideoCapture Videoio]
+        '[org.opencv.objdetect CascadeClassifier])
+
+(import 'java.nio.ByteBuffer)
+(import 'java.nio.ByteOrder)
+
+(def video-feed (VideoCapture. 0))
+(def current-frame (ref nil))
+(def continue-seeing (ref false))
+(def cur-see-thread (ref (Thread. (fn []))))
+
+(int (.get video-feed (. Videoio CAP_PROP_FRAME_WIDTH)))
+(int (.get video-feed (. Videoio CAP_PROP_FPS)))
+
+
+(defn get-max-fps []
+  (let [start-time
+        (. System currentTimeMillis)
+
+        buf
+        (Mat.
+         (int (.get video-feed (. Videoio CAP_PROP_FRAME_WIDTH)))
+         (int (.get video-feed (. Videoio CAP_PROP_FRAME_HEIGHT)))
+         CvType/CV_8UC3)]
+
+    (doall (for [x (range 20)]
+       (.read video-feed buf)))
+    (float (/ 20 (/ (- (. System currentTimeMillis) start-time) 1000)))))
+
+
+(def frame-ref (ref (Mat.)))
+(def img (ref nil))
+
+
+(def face-classifier (CascadeClassifier. "/Users/collinbell/opt/opencv/data/haarcascades/haarcascade_frontalface_default.xml"))
+
+(defn detect-face [img]
+  (let [grey (Mat.)
+        faces (MatOfRect.)]
+    (. Imgproc cvtColor img grey Imgproc/COLOR_RGB2GRAY)
+    (.detectMultiScale face-classifier grey faces)
+    (filter #(if (> (.-width %1) 150) true false) (.toArray faces))))
+
+(defn see []
+  (if (or @continue-seeing (.isAlive @cur-see-thread))
+    (throw (Exception. "Dameon is already seeing")))
+  (dosync (ref-set continue-seeing true))
+  (let [thread
+        (Thread.
+          (fn []
+            (while @continue-seeing
+              (let [buf ;the buffer must be reinstanciated every frame due to it being a Java class
+                    (Mat.
+                     (int (.get video-feed (. Videoio CAP_PROP_FRAME_WIDTH)))
+                     (int (.get video-feed (. Videoio CAP_PROP_FRAME_HEIGHT)))
+                     CvType/CV_8UC3)]
+
+                (.read video-feed buf)
+                (dosync (ref-set current-frame buf))))))]
+    (.start thread)
+    thread))
+
+(defn stop-seeing []
+  (dosync (ref-set continue-seeing false)))
+
+(defn get-current-frame []
+  @current-frame)
+
+(defn draw  []
+  (q/background 0)
+  (let
+      [new-frame
+       (Mat.
+        (int (.get video-feed (. Videoio CAP_PROP_FRAME_WIDTH)))
+        (int (.get video-feed (. Videoio CAP_PROP_FRAME_HEIGHT)))
+        CvType/CV_8UC3)]
+    (q/text (str new-frame) 20 600)
+    (q/text (str "Num Channels: " (.channels new-frame)) 20 630)
+       (.read video-feed new-frame)
+       (Imgcodecs/imwrite "derp.jpg" new-frame)
+       (q/image (toPImage new-frame) 0 0 )
+       (q/fill 0 0 0 0)
+       (q/stroke-weight 3)
+       (doall (map #(q/rect (.-x %1) (.-y %1) (.-width %1) (.-height %1)) (detect-face new-frame)))))
+
+
+
+
+(q/defsketch example                  ;; Define a new sketch named example
+  :title "Rouge Eyes"                 ;; Set the title of the sketch
+  :settings #(q/smooth 2)             ;; Turn on anti-aliasing
+  :setup setup                        ;; Specify the setup fn
+  :draw draw                          ;; Specify the draw fn
+  :size [ 1280  720 ])        
+
+
+
+
+
+
+
+
+
+

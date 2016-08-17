@@ -1,0 +1,24 @@
+(ns dameon.visual-cortex.core
+  (require [dameon.eyes.core :as eyes]))
+
+(eyes/see) ;start the eyes.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

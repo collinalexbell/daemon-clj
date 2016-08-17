@@ -83,7 +83,16 @@
   (q/image (mat-to-p-image mat) 0 0 ))
 
 (defn update-mat-to-display [mat]
-  (dosync (ref-set mat-to-draw mat)))
+  (try
+    (let [mat
+         (if (= (.size mat)
+                (Size. width height))
+           mat
+           (let [tmp-mat (.clone mat)]
+             (. Imgproc resize mat tmp-mat (Size. width height))
+             tmp-mat))]
+      (dosync (ref-set mat-to-draw mat)))
+    (catch Exception e (println (str (.getMessage e))))))
 
 (defn activate-mat-display []
   (dosync (ref-set draw-mat? true)))

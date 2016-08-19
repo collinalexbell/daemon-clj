@@ -1,6 +1,7 @@
 (ns dameon.visual-cortex.core
   (require [dameon.eyes.core :as eyes]
            [dameon.face.core :as face]
+           [dameon.visual-cortex.stream :as stream]
            [clojure.core.async :as async]))
 
 
@@ -15,21 +16,6 @@
 (def stream-on-face-running (ref false))
 (def sees-person (ref false))
 
-(defmulti get-current-frame (fn [stream] (:type stream)))
-
-(defmethod get-current-frame :eye [stream]
-  (eyes/get-current-frame))
-
-(defn print-n-return [item]
-  (println item)
-  item)
-
-(defmethod get-current-frame :rect [stream]
-  (let [rv    (.clone (get-current-frame (stream :parent)))] 
-     (reduce
-      (fn [rv rect] (. Imgproc rectangle rv (.tl rect) (.br rect) (Scalar. 0.0)) rv)
-      rv
-      ((stream :rect-array-generator) (stream :parent)))))
 
 
 (def face-classifier (CascadeClassifier. "/Users/collinbell/opt/opencv/data/haarcascades/haarcascade_frontalface_default.xml"))
@@ -38,7 +24,7 @@
   (let [grey (Mat.)
         faces (MatOfRect.)
         scale 4]
-    (. Imgproc cvtColor (get-current-frame stream) grey Imgproc/COLOR_RGB2GRAY)
+    ;;(. Imgproc cvtColor (get-current-frame stream) grey Imgproc/COLOR_RGB2GRAY)
     (. Imgproc resize grey grey (Size. (int (/ (.width grey) scale)) (int (/ (.height grey) scale))))
     (.detectMultiScale face-classifier grey faces)
     (let [rv
@@ -52,21 +38,24 @@
       rv)))
 
 
-(defn show-stream-on-face [stream]
+(defn show-stream-on-face []
   (if @stream-on-face-running (throw (Exception. "Stream is already running")))
   (dosync (ref-set stream-on-face-running true))
   (face/activate-mat-display)
-  (let [thread
+  (let [base-stream
+        (agent (stream/->Base-stream []))
+        thread
         (Thread.
          (fn []
+           (eyes/add-subscriber base-stream)
            (while @stream-on-face-running
              (let [start-time (. System currentTimeMillis)]
-               (face/update-mat-to-display (get-current-frame stream))
+               (face/update-mat-to-display (get @base-stream :cur-frame))
                (let [elapsed-time 
                      (- (. System currentTimeMillis) start-time)
 
                      remaining-time
-                     (- (* 1000 (/ 1 5)) elapsed-time )]
+                     (- (* 1000 (/ 1 30)) elapsed-time)]
                  
                  (if (> remaining-time 0)
                    (. Thread sleep remaining-time)))))))]
@@ -77,7 +66,7 @@
   (show-stream-on-face {:type :rect :rect-array-generator detect-face :parent {:type :eye}}))
 
 (defn remove-stream-on-face []
-  (dosync (ref-set stream-on-face-running false))
+  (dosync (ref-set stream-on-face-running false) (ref-set eyes/subscribers []))
   (face/deactivate-mat-display))
 
 

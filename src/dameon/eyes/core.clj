@@ -1,4 +1,7 @@
-(ns dameon.eyes.core)
+(ns dameon.eyes.core
+  (require [dameon.visual-cortex.stream :as vis-stream])
+  (use [clojure.core.async :only (go)]))
+
 
 (import '[org.opencv.core MatOfInt MatOfByte MatOfRect Mat CvType Size]
         '[org.opencv.imgcodecs Imgcodecs]
@@ -8,9 +11,13 @@
 
 (import 'java.nio.ByteBuffer)
 (import 'java.nio.ByteOrder)
+(import 'java.util.concurrent.locks.ReentrantReadWriteLock)
 
+(def gc-freq-in-mins (* 60 2))
+
+(def subscribers (ref []))
 (def video-feed (VideoCapture. 0))
-(def current-frame (ref (Mat.)))
+(def current-frame (ref {:buf (Mat.) :lock (ReentrantReadWriteLock.)}))
 (def continue-seeing (ref false))
 (def cur-see-thread (ref (Thread. (fn []))))
 
@@ -18,7 +25,10 @@
   [(int (.get video-feed (. Videoio CAP_PROP_FRAME_WIDTH)))
    (int (.get video-feed (. Videoio CAP_PROP_FRAME_HEIGHT)))])
 
-(defn get-max-fps []
+(defn get-max-fps
+  "Warning! This will kill the current eyes stream"
+  []
+  (stop-seeing)
   (let [start-time
         (. System currentTimeMillis)
 
@@ -32,41 +42,53 @@
        (.read video-feed buf)))
     (float (/ 20 (/ (- (. System currentTimeMillis) start-time) 1000)))))
 
-(defn see []
-  (if (or @continue-seeing (.isAlive @cur-see-thread))
-    (throw (Exception. "Dameon is already seeing")))
-  (dosync (ref-set continue-seeing true))
-  (let [gc-time (ref (. System currentTimeMillis))
 
-        thread
-        (Thread.
-          (fn []
-            (while @continue-seeing
-              (let [buf ;the buffer must be reinstanciated every frame due to it being a Java class
-                    (Mat.
-                     (int (.get video-feed (. Videoio CAP_PROP_FRAME_WIDTH)))
-                     (int (.get video-feed (. Videoio CAP_PROP_FRAME_HEIGHT)))
-                     CvType/CV_8UC3)]
+(defn get-current-frame []
+  (let [current-frame @current-frame]
+   (.lock (.readLock (:lock current-frame)))
+   (try
+     (.clone (:mat current-frame))
+     (finally (.unlock (.readLock (:lock current-frame)))))))
 
-                (.read video-feed buf)
-                (dosync
-                 (.release @current-frame)
-                 (ref-set current-frame buf))))))]
-    (.start thread)
-    thread))
 
 (defn stop-seeing []
   (dosync (ref-set continue-seeing false)))
 
-(defn get-current-frame []
-  @current-frame)
 
+(defn see []
+  (if (or @continue-seeing (.isAlive @cur-see-thread))
+    (throw (Exception. "Dameon is already seeing")))
+  (dosync (ref-set continue-seeing true))
+  (let [time-since-last-gc (ref (. System currentTimeMillis))
 
+        thread
+        (Thread.
+          (fn []
+            (try
+             (while @continue-seeing
+               (let [buf ;the buffer must be reinstanciated every frame due to it being a Java class
+                     (Mat.
+                      (int (.get video-feed (. Videoio CAP_PROP_FRAME_WIDTH)))
+                      (int (.get video-feed (. Videoio CAP_PROP_FRAME_HEIGHT)))
+                      CvType/CV_8UC3)]
 
+                 (.read video-feed buf)
+                 (go
+                   (let [cur-frame @current-frame]
+                     (.lock (.writeLock (:lock @current-frame)))
+                     (try
+                       (.release (:mat @current-frame))
+                       (finally (.unlock (.writeLock (:lock @current-frame)))))))
+                 (dosync (ref-set current-frame {:mat buf :lock (ReentrantReadWriteLock.)}))
+                 (go (doall (map #(send %1 vis-stream/update-frame (get-current-frame)) @subscribers)))
+                 (if (> (. System currentTimeMillis) (+ @time-since-last-gc (* 1000 60 gc-freq-in-mins)))
+                   (do (. System gc)
+                       (dosync (ref-set time-since-last-gc (. System currentTimeMillis)))))))
+             (catch Exception e (do (println (str e)) (stop-seeing))))))]
+    (.start thread)
+    thread))
 
-
-
-
-
+(defn add-subscriber [subscriber]
+  (dosync (ref-set subscribers (cons subscriber @subscribers))))
 
 

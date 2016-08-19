@@ -1,14 +1,31 @@
 (ns dameon.visual-cortex.stream
   (require [dameon.eyes.core :as eyes]))
 
-(def vis (eyes/see))
-(eyes/stop-seeing)
 (defprotocol Stream
   "Unit of Visual Processing"
-  (get-next-frame [rec]))
+  (update-frame [rec new-frame]))
 
-(eyes/get-current-frame)
-(extend-type
- nil
- Stream
- (get-next-frame [rec] (eyes/get-current-frame)))
+
+(defn subscribe [stream]
+  (swap! (stream :subscribers) assoc stream))
+
+
+(defrecord Base-stream [subscribers]
+  Stream
+  (update-frame [this new-frame]
+    (doall
+     (map #(send %1 update-frame new-frame) subscribers))
+    (assoc this :cur-frame new-frame)))
+
+(defrecord Rect-stream [parent gen-rect-array-fn]
+  Stream
+  (get-next-frame [rec]
+    (get-next-frame (:parent rec)))) 
+
+
+(defn test-base-stream []
+  (let [base-stream  (agent (->Base-stream []))]
+    (dosync (ref-set eyes/subscribers []))
+    (eyes/add-subscriber base-stream)
+    (Thread/sleep 2000)
+    (agent-error (first @eyes/subscribers))))

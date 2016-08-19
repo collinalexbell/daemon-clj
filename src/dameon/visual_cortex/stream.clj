@@ -1,16 +1,19 @@
-(ns dameon.visual-cortex.stream
-  (require [dameon.eyes.core :as eyes]))
-
-(eyes/see)
+(ns dameon.visual-cortex.stream)
 
 
 (defprotocol Stream
   "Unit of Visual Processing"
-  (get-next-frame [rec]))
+  (update-frame [rec new-frame]))
 
-(extend-type
- nil
- Stream
- (get-next-frame [rec] (eyes/get-current-frame)))
 
+(defn subscribe [stream]
+  (swap! (stream :subscribers) assoc stream))
+
+
+(defrecord Base-stream [subscribers]
+  Stream
+  (update-frame [this new-frame]
+    (doall
+     (map #(send %1 update-frame new-frame) subscribers))
+    (assoc this :cur-frame new-frame)))
 

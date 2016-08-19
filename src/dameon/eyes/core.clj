@@ -25,6 +25,10 @@
   [(int (.get video-feed (. Videoio CAP_PROP_FRAME_WIDTH)))
    (int (.get video-feed (. Videoio CAP_PROP_FRAME_HEIGHT)))])
 
+
+(defn stop-seeing []
+  (dosync (ref-set continue-seeing false)))
+
 (defn get-max-fps
   "Warning! This will kill the current eyes stream"
   []
@@ -51,8 +55,6 @@
      (finally (.unlock (.readLock (:lock current-frame)))))))
 
 
-(defn stop-seeing []
-  (dosync (ref-set continue-seeing false)))
 
 
 (defn see []
@@ -73,14 +75,14 @@
                       CvType/CV_8UC3)]
 
                  (.read video-feed buf)
-                 (go
-                   (let [cur-frame @current-frame]
-                     (.lock (.writeLock (:lock @current-frame)))
+                 (let [cur-frame @current-frame]
+                   (go
+                     (.lock (.writeLock (:lock cur-frame)))
                      (try
-                       (.release (:mat @current-frame))
-                       (finally (.unlock (.writeLock (:lock @current-frame)))))))
+                       (.release (:mat cur-frame))
+                       (finally (.unlock (.writeLock (:lock cur-frame)))))))
                  (dosync (ref-set current-frame {:mat buf :lock (ReentrantReadWriteLock.)}))
-                 (go (doall (map #(send %1 vis-stream/update-frame (get-current-frame)) @subscribers)))
+                 (doall (map #(send %1 vis-stream/update-frame (get-current-frame)) @subscribers))
                  (if (> (. System currentTimeMillis) (+ @time-since-last-gc (* 1000 60 gc-freq-in-mins)))
                    (do (. System gc)
                        (dosync (ref-set time-since-last-gc (. System currentTimeMillis)))))))
@@ -90,5 +92,12 @@
 
 (defn add-subscriber [subscriber]
   (dosync (ref-set subscribers (cons subscriber @subscribers))))
+
+
+(defn remove-subscriber [subscriber]
+  (dosync (ref-set subscribers (remove #(= subscriber %) @subscribers))))
+
+
+
 
 

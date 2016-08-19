@@ -98,6 +98,8 @@
   (dosync (ref-set subscribers (remove #(= subscriber %) @subscribers))))
 
 
+(defn clear-subscribers []
+  (dosync (ref-set subscribers [])))
 
 
 

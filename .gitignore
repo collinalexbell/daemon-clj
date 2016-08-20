@@ -11,5 +11,5 @@ pom.xml.asc
 .hg/
 cerevoice/
 *~
-#*
+*#
 *.log

@@ -17,7 +17,7 @@
   [a] 
 
   (error-check a)
-  (smart-object/get-object @(a :data)))
+  (smart-object/get-object @(a :smart-object-atom)))
 
 
 (defn copy
@@ -27,7 +27,7 @@
   [a]
   
   (error-check a)
-  (swap! (a :smart-obj-atom) smart-object/pointer-copied)
+  (swap! (a :smart-object-atom) smart-object/pointer-copied)
   a)
 
 (defn delete
@@ -35,7 +35,7 @@
   When all copies of the atom are inactive the object will be deallocated from native memory."
   [a]
   (error-check a)
-  (swap! (a :smart-obj-atom) smart-object/pointer-deleted)
+  (swap! (a :smart-object-atom) smart-object/pointer-deleted)
   (assoc a :deleted true))
 
 

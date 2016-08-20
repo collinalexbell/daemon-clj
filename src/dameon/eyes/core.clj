@@ -30,8 +30,7 @@
   (dosync (ref-set subscribers [])))
 
 (defn stop-seeing []
-  (dosync (ref-set continue-seeing false))
-  (clear-subscribers))
+  (dosync (ref-set continue-seeing false)))
 
 (defn get-max-fps
   "Warning! This will kill the current eyes stream"
@@ -90,7 +89,7 @@
                  (if (> (. System currentTimeMillis) (+ @time-since-last-gc (* 1000 60 gc-freq-in-mins)))
                    (do (. System gc)
                        (dosync (ref-set time-since-last-gc (. System currentTimeMillis)))))))
-             (catch Exception e (do (println (str e)) (stop-seeing))))))]
+             (catch Exception e (do (println (str e "\n" )) (stop-seeing))))))]
     (.start thread)
     thread))
 

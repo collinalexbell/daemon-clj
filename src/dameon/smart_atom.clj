@@ -1,6 +1,10 @@
 (ns dameon.smart-atom
-  (require [dameon.smart-object :as smart-object]))
+  (require [dameon.smart-object :as smart-object]
+           [clojure.spec :as s]))
 
+(s/def ::smart-object #(satisfies? smart-object/SmartObject (deref %)))
+(s/def ::smart-atom (s/keys :smart-object-atom [::smart-object]))
+(s/def ::live-smart-atom (s/and ::smart-atom #(not (contains? % :deleted))))
 
 (defn- error-check [a]
     (if (not (nil? (a :deleted)))

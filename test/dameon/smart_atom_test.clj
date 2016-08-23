@@ -12,8 +12,9 @@
     (is (s/valid? :dameon.smart-atom/smart-atom a))
     (is (s/valid? :dameon.smart-atom/live-smart-atom a))
     (is (not (.empty (smart-atom/deref a))))
-    (let [b (smart-atom/copy a)]
-      (smart-atom/delete a)
+    (let [b (smart-atom/copy a)
+          del-a (smart-atom/delete a)]
+      (is (not (s/valid? :dameon.smart-atom/live-smart-atom del-a)))
       (is (not (.empty (smart-atom/deref b))))
       (smart-atom/delete b)
       (is (.empty (smart-atom/deref b))))))

@@ -1,48 +1,37 @@
-(ns dameon.visual-cortex.stream)
+(ns dameon.visual-cortex.stream
+  (require [dameon.smart-atom :as smart-atom]
+           [clojure.spec :as s]
+           [clojure.core.async :refer [go]]))
 
-(defn cleanup-stream [stream])
-
+(defn foo [a] (go [] a))
+(foo)
 
 (defprotocol Stream
   "Unit of Visual Processing"
-  (update-frame [rec parent]))
+  (gen-new-data [stream smart-mat]))
 
+(defn update-mat
+  "Will generate new stream data and pass that data to this streams subscribers and call any terminus functions"
+  [stream smart-mat]
+  (let [data (gen-new-data stream smart-mat)]
+   (doall
+    (map #(go (% (assoc data :smart-mat (smart-atom/copy (data :smart-mat)))))
+         (get stream :termini)))
+   (doall
+    (map
+     #(let [copied-mat-smart-atom (smart-atom/copy (data :smart-mat))]
+        (go (update-mat % copied-mat-smart-atom)))
+      (get stream :up-streams)))
+   ;;clean up the new-new frame reference
+   (smart-atom/delete (data :smart-mat)))
+  stream)
 
-(defn subscribe [stream]
-  (swap! (stream :subscribers) assoc stream))
-
-(defn no-one-holding? [frame])
-
-(defn release-old-mat-if-neccisary [stream]
-  ;;We know that a frame is "dead" if:
-  ;;1) a new update-frame call has been made
-  ;;2) there were no subscribers on the last update-frame call
-  ;;3) deref does not have a reference to it before it is finished cloning it
-  (if (not (get stream :subscribers-on-last-update?))
-   (go
-     (.lock (.writeLock (get stream :lock)))
-     (try
-       (.release (get stream :cur-frame))
-       (finally (.unlock (.writeLock (get stream :lock)))))))) 
-
-(defn get-current-frame [stream]
-   (.lock (.readLock (get stream :lock))))
-   (try
-     (.clone (get stream :cur-frame))
-     (finally (.unlock (.readLock (get stream :lock))))))
-
-(defn deref [stream-agent]
-  (assoc stream-agent :cur-frame (.clone (get stream-agent :cur-frame))))
-
-(defrecord Base-stream [subscribers]
+(defrecord Base-stream [up-streams termini]
   Stream
-  (update-frame [this parent]
-    (let [new-stream (assoc this :cur-frame (get parent :cur-frame))]
-      (release-old-mat-if-neccisary new-stream)
-      (doall
-       (map #(send %1 update-frame new-stream) subscribers))
-      ;;side-effects
-      new-stream))) 
+  (gen-new-data [this smart-mat]
+    {:smart-mat smart-mat})) 
+
+
 
 
 

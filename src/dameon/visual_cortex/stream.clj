@@ -3,8 +3,6 @@
            [clojure.spec :as s]
            [clojure.core.async :refer [go]]))
 
-(defn foo [a] (go [] a))
-(foo)
 
 (defprotocol Stream
   "Unit of Visual Processing"
@@ -15,13 +13,16 @@
   [stream smart-mat]
   (let [data (gen-new-data stream smart-mat)]
    (doall
-    (map #(go (% (assoc data :smart-mat (smart-atom/copy (data :smart-mat)))))
-         (get stream :termini)))
+    (map (fn [the-fn] (let [smart-atom-copy (smart-atom/copy (data :smart-mat))]
+                  (go 
+                    (the-fn (assoc data :smart-mat smart-atom-copy)))))
+           (get stream :termini)))
    (doall
     (map
      #(let [copied-mat-smart-atom (smart-atom/copy (data :smart-mat))]
-        (go (update-mat % copied-mat-smart-atom)))
-      (get stream :up-streams)))
+        ;(println  (str "IN UPSTREAM LOOP: " copied-mat-smart-atom))
+        (update-mat % copied-mat-smart-atom))
+     (get stream :up-streams)))
    ;;clean up the new-new frame reference
    (smart-atom/delete (data :smart-mat)))
   stream)
@@ -30,20 +31,6 @@
   Stream
   (gen-new-data [this smart-mat]
     {:smart-mat smart-mat})) 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

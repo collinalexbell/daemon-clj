@@ -5,21 +5,21 @@
 
 (import '[org.opencv.core Mat CvType])
 
+
 (deftest test-update-mat
   (let [foo (atom 1) bar (atom 1)
         mat (Mat. 200 200 CvType/CV_8UC3)
         stream (stream/->Base-stream
-                [(stream/->Base-stream [] [#(swap! bar (fn [b] identity :derp))])]
+                [(stream/->Base-stream [] [(fn [obj] (do (smart-atom/delete (:smart-mat obj)) (swap! bar (fn [b] identity :derp))))])]
                 [#(do (swap! foo (fn [f] identity :changed)) (smart-atom/delete (:smart-mat %1)))])]
     (stream/update-mat stream (smart-atom/create mat))
-    (Thread/sleep 3000)
-    ;;(is (= @foo :changed))
-    ;;(is (= @bar :derp))
+    (Thread/sleep 1000)
+    (is (= @foo :changed))
+    (is (= @bar :derp))
     (is (.empty mat))))
 
 (run-tests)
 
-(+ 2 2)
 
 
 

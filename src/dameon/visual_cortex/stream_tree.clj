@@ -1,5 +1,27 @@
 (ns dameon.visual-cortex.stream-tree)
 
+(defn remove-from-vec [a index]
+  (vec (concat (subvec a 0 index) (subvec a (+ index 1)))))
+
+(defn dissoc-in
+  "Dissociates an entry from a nested associative structure returning a new
+  nested structure. keys is a sequence of keys. Any empty maps that result
+  will not be present in the new structure."
+  [m keys]
+  ;;using ex (dissoc-in {:foo {:bar [:baz :bot]}} [:foo :bar 0])
+  (let [container
+        ;;[:baz :bot]
+        (get-in m
+                ;; [:foo :bar]
+                (butlast keys))]
+
+    (assoc-in
+     m (butlast keys)
+     (if (= (type {}) (type container))
+       (dissoc container (last keys))
+       (remove-from-vec (into [] container) (last keys))))))
+
+
 (defn create []
   {:paths {} :structure []})
 
@@ -36,6 +58,53 @@
        (assoc-in
         [:paths (get stream :name)] 
         (conj path (count parent-upstreams))))))
+
+
+(defn get
+  "Fetches the stream from the tree with the given name"
+  [tree stream-name]
+  (let [path (get-in tree [:paths stream-name] nil)]
+    (if (nil? path) 
+      nil
+      (get-in- (tree :structure) path))))
+
+
+(defn remove-path-from-paths-
+  [tree p]
+  (assoc tree :paths
+         (filter
+          (comp not nil?)
+          (map (fn [path]
+                 (let [ind-pos (- (count p) 1)
+                       ;;ex
+                       ;;[0 2] => 2
+                       ind-to-del (last p)
+                       ;;[0 3 0] => 3
+                       ind-to-test (nth (last path) ind-pos -1)]
+                   (cond
+                     (> ind-to-test ind-to-del)
+                     {(first path) (assoc (last path) ind-pos (- (nth (last path) ind-pos) 1))}
+
+                     (= ind-to-test ind-to-del)
+                     nil
+
+                     :else
+                     path)))
+               (tree :paths)))))
+
+
+(defn delete
+  "Removes the stream from the tree with the given name."
+  [tree stream-name]
+  (let [path (get-in tree [:paths stream-name])]
+    ;;return the new tree
+    (-> tree
+        (remove-path-from-paths- path)
+        (dissoc-in (concat [:structure ]
+                             ;; [:structure 0 ..]
+                             [(first path)]
+                             ;; [:structure 0 :up-streams 0 ...]
+                             (interleave (repeat :up-streams) (rest path)))))))
 
 
 

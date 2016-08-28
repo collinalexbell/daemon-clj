@@ -40,7 +40,6 @@
 
 
 
-(if (nil? parent-name)
 
 
 

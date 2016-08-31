@@ -8,3 +8,116 @@
 ** Aug 26, 2016 ~ MINI Goal!
 *** Find a way to easily build up streams.
 ****  
+** The Home Dameon features
+*** Turn on music @ appropriate times!
+*** Turn on lights @ appropriate times!
+*** Alarm Clock
+*** Notify you when things break
+*** Ask questions outloud and automatically get a response
+*** Ship it with an extra long ethernet cable
+*** It needs speakers
+*** A display
+*** Wifi
+*** Full routing capability
+*** Needs a standard server api that allows any connected device to communicate with it.
+*** Monitor my heart rate
+*** Greet me when I walk into the house
+*** Read my schedule out loud to me
+*** Show relevant family photos
+*** Collect data about yourself 
+*** Record when I complete todos automatically.
+***  
+
+** Marketing
+*** I will visit every person's home to get a feel for the type of spirit they want
+		
+
+** Feature List 
+Ranked by difficulty ~ 1 2 3 4 5
+Ranked by importance ~ 5 4 3 2 1
+
+Select name for home spirit -- Calcifer. Users can select their own name. The spirit face I think should be modeled after Calcifer. That would be totally cute! 
+Design elemental spirits for the home! Allow users to choose between Earth, fire, air, water, and rock.
+Give users the ability to make their own spirit animations! 
+Memorize the members of the home
+Greet the members of the home upon seeing
+Greet the members by name upon seeing
+Set as an alarm clock
+API so that users can create their own applications
+
+** Things to do:
+*** DONE Tweet at PG about Cons
+		CLOSED: [2016-08-30 Tue 15:01]
+*** DONE Ask Melanie for email of the person so I can appologize.
+		CLOSED: [2016-08-30 Tue 14:27]
+*** DONE Make Schedule
+		CLOSED: [2016-08-30 Tue 16:06]
+
+
+** Minimum feature list
+*** Voice commands.
+**** Turn off
+**** Go to sleep
+**** Wake up
+*** Ability to name the spirit.
+*** Turn off via voice command
+*** Ability for the spirit to see when you are in the room.
+*** Alarm clock app for the spirit.
+*** Reminder app for the spirit using google calendar.
+*** Ability for the spirit to log what time you wake up.
+*** Ability for the spirit to read a message from an important person.
+*** API to program apps for the spirit.
+*** Todo list checker for the spirit. (SUPER ADVANCED)
+		
+
+** Schedule
+*** Aug 30, 2016 ~ Tue
+**** DONE Make a list of the minimum feature set that must be included for the demo video
+		 CLOSED: [2016-08-30 Tue 15:50]
+**** DONE Tweet at PG about Cons
+		CLOSED: [2016-08-30 Tue 15:01]
+**** DONE Ask Melanie for email of the person so I can appologize.
+		CLOSED: [2016-08-30 Tue 14:27]
+**** DONE Make an MVP minimum feature completion schedule
+		 CLOSED: [2016-08-30 Tue 16:07]
+*** Aug 31, 2016 ~ Wed
+**** TODO Ability for the spirit to see when you are in the room.
+***** DONE Write tests for stream_tree delete and stream_tree get
+			CLOSED: [2016-08-31 Wed 10:44]
+***** DONE Create a tree in the visual cortex which will be the singleton tree
+			CLOSED: [2016-08-31 Wed 16:20]
+***** DONE Get streams to work with FPS
+			CLOSED: [2016-08-31 Wed 17:35]
+***** TODO Build a stream that detects faces!
+**** TODO Voice command.
+**** TODO Alarm clock app.
+*** Sept 1, 2016 ~ Thurs
+**** TODO Sign the deal with CereProc for the inclusion of their text to speech software
+**** TODO Get Cash via western union
+**** TODO Reminder app for the spirit using google calendar.
+**** TODO Ability for the spirit to read a message from an important person.
+**** TODO Ability for the spirit to log what time you wake up.
+*** Sept 2, 2016 ~ Fri
+**** TODO API to program apps for the spririt.
+*** Sept 3, 2016 ~ Sat
+**** TODO On the Plane: Write demo script
+**** TODO Get the kawaii plastic enclosure designed in photoshop
+**** TODO Send 3d model to protolabs to get a quote for the part.
+**** TODO Make friends with someone who owns smart home equipment
+*** Sept 4, 2016 ~ Sun
+**** TODO Find someone with a good quality video camera
+**** TODO Sell my microsoft surface pro for 400$
+**** TODO Get the kawaii plastic enclosure designed in a cad software for 3d printing
+**** TODO Buy a rpi 3, a 7 inch tft screen, sd card, and an rpi camera
+**** TODO Install OS, Clojure, power supply and my library onto the rpi
+*** Sept 5, 2016 ~ Mon
+**** TODO 3d print the case for demo
+**** TODO Edit demo video
+**** TODO Set up demo in their home and record
+**** TODO Source 650 units of all of the hardware and determine complete cost
+**** TODO Determine shipping cost both domestic and international. (International taxes?)
+**** TODO Create Kickstarter Rewards scheme
+*** Sept 6, 2016 ~ Tues
+**** TODO Make a list of the minimum feature set that must be included for the shipped product
+**** TODO Advertise product in blogs, news site, social media. 
+

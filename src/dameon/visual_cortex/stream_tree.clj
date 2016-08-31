@@ -38,7 +38,7 @@
 
 (defn add
   "Add stream to tree at index"
-  [stream tree & [parent-name]]
+  [tree stream & [parent-name]]
   (let [path
         (if (nil? parent-name)
           []

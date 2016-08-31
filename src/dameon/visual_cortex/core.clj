@@ -1,7 +1,8 @@
 (ns dameon.visual-cortex.core
-  (require [dameon.eyes.core :as eyes]
+  (require ;;[dameon.eyes.core :as eyes]
            [dameon.face.core :as face]
            [dameon.visual-cortex.stream :as stream]
+           [dameon.visual-cortex.stream-tree :as stree]
            [clojure.core.async :as async]))
 
 
@@ -12,7 +13,9 @@
 
 
 ;;start the eyes.
-(def eye-thread (eyes/see))
+(def tree (atom (stree/create)))
+
+(def eye-thread (eyes/see tree))
 
 (def stream-on-face-running (ref false))
 
@@ -44,10 +47,15 @@
   (face/deactivate-mat-display))
 
 
-
 (defn display-basic-vision []
-  (let [stream (agent (stream/->Base-stream []))]
-    (eyes/add-subscriber stream)
-    (let [thread (show-stream-on-face stream)]
-      #(do (print (str "th alive? " (.isAlive thread))) (remove-stream-on-face) (eyes/remove-subscriber stream)))))
+  (face/activate-mat-display)
+  (swap! tree stree/add
+         (stream/->Base-stream []
+                               [#(do (face/update-mat-to-display) (% :smart-mat)
+                                     (spit "display-basic-vision.log" (str % "\n")))]
+                               :base-stream)))
 
+
+(defn stop-display-basic-vision []
+  (face/deactivate-mat-display)
+  (def tree (atom (stree/create))))

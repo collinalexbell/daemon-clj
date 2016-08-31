@@ -58,14 +58,11 @@
      (finally (.unlock (.readLock (:lock current-frame)))))))
 
 
-
-
-(defn see []
+(defn see [stream-tree]
   (if (or @continue-seeing (.isAlive @cur-see-thread))
     (throw (Exception. "Dameon is already seeing")))
   (dosync (ref-set continue-seeing true))
   (let [time-since-last-gc (ref (. System currentTimeMillis))
-
         thread
         (Thread.
           (fn []
@@ -78,27 +75,14 @@
                       CvType/CV_8UC3)]
 
                  (.read video-feed buf)
-                 (let [cur-frame @current-frame]
-                   (go
-                     (.lock (.writeLock (:lock cur-frame)))
-                     (try
-                       (.release (:mat cur-frame))
-                       (finally (.unlock (.writeLock (:lock cur-frame)))))))
-                 (dosync (ref-set current-frame {:mat buf :lock (ReentrantReadWriteLock.)}))
-                 (doall (map #(send %1 vis-stream/update-frame {:cur-frame (get-current-frame)}) @subscribers))
+                 (map #(go (stream/update-mat %)) (stree/get-roots stream-tree))
                  (if (> (. System currentTimeMillis) (+ @time-since-last-gc (* 1000 60 gc-freq-in-mins)))
-                   (do (. System gc)
-                       (dosync (ref-set time-since-last-gc (. System currentTimeMillis)))))))
+                   (do
+                     (. System gc)
+                     (dosync (ref-set time-since-last-gc (. System currentTimeMillis)))))))
              (catch Exception e (do (println (str e "\n" )) (stop-seeing))))))]
     (.start thread)
     thread))
-
-(defn add-subscriber [subscriber]
-  (dosync (ref-set subscribers (cons subscriber @subscribers))))
-
-
-(defn remove-subscriber [subscriber]
-  (dosync (ref-set subscribers (remove #(= subscriber %) @subscribers))))
 
 
 

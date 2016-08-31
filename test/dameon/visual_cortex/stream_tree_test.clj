@@ -7,23 +7,48 @@
 
 (deftest add
   (let [tree (t/create)
-        s1   (s/->Base-stream [] [])]
-    ;;Exception if stream doesn't have a name
-    (is (thrown? Exception (t/add s1 tree)))
-    (let [s1 (assoc s1 :name :foo)]
-     ;;Exception if the parant with parent-name doesn't exist
-      (is (thrown? Exception (t/add s1 tree :bar)))
-     ;;Test t/add when t is empty
-      (is (= (t/add s1 tree) {:paths {:foo [0]} :structure [s1]}))
-      ;;Test t/add 2x when t is empty
-      (let [s2 (assoc (s/->Base-stream [] []) :name :bar)]
-       (is (= (t/add s2 (t/add s1 tree)) {:paths {:foo [0] :bar [1]} :structure [s1 s2]})))
-      (let [s-w-upstream (assoc (s/->Base-stream [(assoc s1 :name :bar)] []) :name :foo)]
-        (is (= (t/add (assoc (s/->Base-stream [] []) :name :bar) (t/add s1 tree) :foo)
-               {:paths {:foo [0] :bar [0 0]} :structure [s-w-upstream]} ))))))
+        s1   (s/->Base-stream [] [] :foo)]
+    ;;Exception if the parant with parent-name doesn't exist
+    (is (thrown? Exception (t/add tree s1 :bar)))
+    ;;Test t/add when t is empty
+    (is (= (t/add tree s1) {:paths {:foo [0]} :structure [s1]}))
+    ;;Test t/add 2x when t is empty
+    (let [s2 (s/->Base-stream [] [] :bar)]
+      (is (= (t/add (t/add tree s1 ) s2) {:paths {:foo [0] :bar [1]} :structure [s1 s2]})))
+    (let [s-w-upstream (s/->Base-stream [(assoc s1 :name :bar)] [] :foo)]
+      (is (= (t/add (t/add tree s1)  (s/->Base-stream [] [] :bar) :foo)
+             {:paths {:foo [0] :bar [0 0]} :structure [s-w-upstream]})))))
 
 
-(run-tests)
+(deftest delete
+  (let [tree
+        (-> (t/create)
+            (t/add (s/->Base-stream [] [] :foo))
+            (t/add (s/->Base-stream [] [] :bar))
+            (t/add (s/->Base-stream [] [] :baz) :bar))]
+
+;;; Types of interactions
+
+    ;; - Delete a node that has no children
+    (is (=
+         (t/delete tree :baz)
+         (-> (t/create)
+              (t/add (s/->Base-stream [] [] :foo))
+              (t/add (s/->Base-stream [] [] :bar)))))
+    ;; - Delete a node that has a child
+    (is (=
+         (t/delete tree :bar)
+         (-> (t/create)
+             (t/add (s/->Base-stream [] [] :foo)))))
+
+    ;; - Delete a node that will shift all other nodes
+    (is (=
+         (t/delete tree :foo)
+         (-> (t/create)
+             (t/add (s/->Base-stream [] [] :bar))
+             (t/add (s/->Base-stream [] [] :baz) :bar))))))
+
+
 
 
 

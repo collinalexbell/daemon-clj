@@ -72,25 +72,27 @@
 (defn remove-path-from-paths-
   [tree p]
   (assoc tree :paths
-         (filter
-          (comp not nil?)
-          (map (fn [path]
-                 (let [ind-pos (- (count p) 1)
-                       ;;ex
-                       ;;[0 2] => 2
-                       ind-to-del (last p)
-                       ;;[0 3 0] => 3
-                       ind-to-test (nth (last path) ind-pos -1)]
-                   (cond
-                     (> ind-to-test ind-to-del)
-                     {(first path) (assoc (last path) ind-pos (- (nth (last path) ind-pos) 1))}
+         (into
+          {}
+          (filter
+           (comp not nil?)
+           (map (fn [path]
+                  (let [ind-pos (- (count p) 1)
+                        ;;ex
+                        ;;[0 2] => 2
+                        ind-to-del (last p)
+                        ;;[0 3 0] => 3
+                        ind-to-test (nth (last path) ind-pos -1)]
+                    (cond
+                      (> ind-to-test ind-to-del)
+                      {(first path) (assoc (last path) ind-pos (- (nth (last path) ind-pos) 1))}
 
-                     (= ind-to-test ind-to-del)
-                     nil
+                      (= ind-to-test ind-to-del)
+                      nil
 
-                     :else
-                     path)))
-               (tree :paths)))))
+                      :else
+                      path)))
+                (tree :paths))))))
 
 
 (defn delete
@@ -107,20 +109,5 @@
                              (interleave (repeat :up-streams) (rest path)))))))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+(defn get-roots [tree]
+  (tree :structure))

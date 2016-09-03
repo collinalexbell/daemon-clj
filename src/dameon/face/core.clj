@@ -2,6 +2,7 @@
   (require
    [dameon.face.emotion-animation :as animation]
    [dameon.settings :as settings]
+   [dameon.smart-atom :as smart-atom]
    [quil.core :as q]
    [quil.middleware :as m]
    [clojure.core.async :as async :refer [go chan <! >!]]))
@@ -82,16 +83,19 @@
 (defn draw-mat [mat]
   (q/image (mat-to-p-image mat) 0 0 ))
 
-(defn update-mat-to-display [mat]
+(defn update-mat-to-display [smart-mat]
   (try
     (let [mat
-         (if (= (.size mat)
+         (if (= (.size (smart-atom/deref smart-mat))
                 (Size. width height))
-           mat
-           (let [tmp-mat (.clone mat)]
-             (. Imgproc resize mat tmp-mat (Size. width height))
+           (.clone (deref smart-mat))
+           (let [tmp-mat (.clone (smart-atom/deref smart-mat))]
+             (. Imgproc resize (smart-atom/deref smart-mat) tmp-mat (Size. width height))
              tmp-mat))]
-      (dosync (ref-set mat-to-draw mat)))
+      (smart-atom/delete smart-mat)
+      (let [old-mat @mat-to-draw]
+        (dosync (ref-set mat-to-draw mat))
+        (.release old-mat)))
     (catch Exception e (println (str (.getMessage e))))))
 
 (defn activate-mat-display []

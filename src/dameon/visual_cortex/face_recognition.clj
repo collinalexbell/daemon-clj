@@ -8,11 +8,11 @@
 (def sees-person (ref false))
 (def face-classifier (CascadeClassifier. "/Users/collinbell/opt/opencv/data/haarcascades/haarcascade_frontalface_default.xml"))
 
-(defn detect-face [stream]
+(defn detect [mat]
   (let [grey (Mat.)
         faces (MatOfRect.)
-        scale 4]
-    (. Imgproc cvtColor (get @stream :cur-frame) grey Imgproc/COLOR_RGB2GRAY)
+        scale 2]
+    (. Imgproc cvtColor mat grey Imgproc/COLOR_RGB2GRAY)
     (. Imgproc resize grey grey (Size. (int (/ (.width grey) scale)) (int (/ (.height grey) scale))))
     (.detectMultiScale face-classifier grey faces)
     (.release grey)
@@ -24,9 +24,9 @@
       (if (> (count rv) 0)
         (dosync (ref-set sees-person true))
         (dosync (ref-set sees-person false)))
+      ;;Clean up
+      (.release grey)
       rv)))
-
-
 
 
 (defn sees-person? []

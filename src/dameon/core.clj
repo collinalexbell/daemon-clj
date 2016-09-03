@@ -1,8 +1,13 @@
 (ns dameon.core
   (require [dameon.voice.core :as voice]
+           [clj-time.core :as t]
+           [clj-time.coerce :as c]
+           [overtone.at-at :as at-at]
            [dameon.face.core :as face]
            [dameon.visual-cortex.core :as visual-cortex]
            [clojure.core.async :as async]))
+
+(import '[java.util.Timer])
 
 (defn greet-person-if-seen []
   (async/go
@@ -24,7 +29,24 @@
   (face/change-emotion :exuberant))
 
 
+(def alarm-not-fired? (atom true))
 
+(defn fire-alarm? [time]
+  (if (and (> (. System currentTimeMillis) time) @alarm-not-fired?)
+    true
+    false))
+
+(def my-pool (at-at/mk-pool))
+
+(defn set-alarm [time]
+   (at-at/at (c/to-long (apply t/date-time time))  
+             #(do (voice/speak "Hello. It is time to wake up!")
+                  (. Thread sleep 3000)
+                  (voice/speak "Hello. It is time to wake up!")
+                  (. Thread sleep 3000)
+                  (voice/speak "Hello. It is time to wake up!")
+                  (swap! alarm-not-fired? (fn [x] (identity false))))
+             my-pool))
 
 
 

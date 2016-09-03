@@ -1,5 +1,7 @@
 (ns dameon.eyes.core
-  (require [dameon.visual-cortex.stream :as vis-stream])
+  (require [dameon.visual-cortex.stream :as vis-stream]
+           [dameon.visual-cortex.stream-tree :as stree]
+           [dameon.smart-atom :as smart-atom])
   (use [clojure.core.async :only (go)]))
 
 
@@ -17,9 +19,8 @@
 
 (def subscribers (ref []))
 (def video-feed (VideoCapture. 0))
-(def current-frame (ref {:buf (Mat.) :lock (ReentrantReadWriteLock.)}))
 (def continue-seeing (ref false))
-(def cur-see-thread (ref (Thread. (fn []))))
+(def cur-see-thread (atom (Thread. (fn []))))
 
 (defn get-field-of-vision []
   [(int (.get video-feed (. Videoio CAP_PROP_FRAME_WIDTH)))
@@ -50,15 +51,8 @@
     (float (/ 20 (/ (- (. System currentTimeMillis) start-time) 1000)))))
 
 
-(defn get-current-frame []
-  (let [current-frame @current-frame]
-   (.lock (.readLock (:lock current-frame)))
-   (try
-     (.clone (:mat current-frame))
-     (finally (.unlock (.readLock (:lock current-frame)))))))
-
-
 (defn see [stream-tree]
+  (print stream-tree)
   (if (or @continue-seeing (.isAlive @cur-see-thread))
     (throw (Exception. "Dameon is already seeing")))
   (dosync (ref-set continue-seeing true))
@@ -75,14 +69,25 @@
                       CvType/CV_8UC3)]
 
                  (.read video-feed buf)
-                 (map #(go (stream/update-mat %)) (stree/get-roots stream-tree))
+                 (doall
+                  (map #(go (vis-stream/update-mat
+                             %
+                             (smart-atom/create buf)
+                             (. System currentTimeMillis)))
+                       (stree/get-roots @stream-tree)))
                  (if (> (. System currentTimeMillis) (+ @time-since-last-gc (* 1000 60 gc-freq-in-mins)))
                    (do
                      (. System gc)
                      (dosync (ref-set time-since-last-gc (. System currentTimeMillis)))))))
              (catch Exception e (do (println (str e "\n" )) (stop-seeing))))))]
     (.start thread)
+    (swap! cur-see-thread (fn [a] identity thread))
     thread))
+
+
+
+
+
 
 
 

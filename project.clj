@@ -7,6 +7,11 @@
   :dependencies [[org.clojure/clojure "1.9.0-alpha10"]
                  [alembic "0.3.2"]
                  [quil "2.4.0"]
+                 [overtone/at-at "1.2.0"]
                  [org.clojure/core.async "0.2.385"]
                  [opencv/opencv "3.1.0"] ; added line
-                 [opencv/opencv-native "3.1.0"]])
+                 [opencv/opencv-native "3.1.0"]
+                 [clj-time "0.12.0"]
+                 [google-apps-clj "0.5.2"]
+                 [org.clojure/data.json "0.2.6"]
+                 [http-kit "2.2.0"]])

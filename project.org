@@ -81,19 +81,23 @@ API so that users can create their own applications
 **** DONE Make an MVP minimum feature completion schedule
 		 CLOSED: [2016-08-30 Tue 16:07]
 *** Aug 31, 2016 ~ Wed
-**** TODO Ability for the spirit to see when you are in the room.
+**** DONE Ability for the spirit to see when you are in the room.
+		 CLOSED: [2016-08-31 Wed 23:42]
 ***** DONE Write tests for stream_tree delete and stream_tree get
 			CLOSED: [2016-08-31 Wed 10:44]
 ***** DONE Create a tree in the visual cortex which will be the singleton tree
 			CLOSED: [2016-08-31 Wed 16:20]
 ***** DONE Get streams to work with FPS
 			CLOSED: [2016-08-31 Wed 17:35]
-***** TODO Build a stream that detects faces!
+***** DONE Build a stream that detects faces!
+			CLOSED: [2016-08-31 Wed 23:42]
 **** TODO Voice command.
-**** TODO Alarm clock app.
+**** DONE Alarm clock app.
+		 CLOSED: [2016-08-31 Wed 23:42]
 *** Sept 1, 2016 ~ Thurs
 **** TODO Sign the deal with CereProc for the inclusion of their text to speech software
-**** TODO Get Cash via western union
+**** DONE Get Cash via western union
+		 CLOSED: [2016-09-01 Thu 06:13]
 **** TODO Reminder app for the spirit using google calendar.
 **** TODO Ability for the spirit to read a message from an important person.
 **** TODO Ability for the spirit to log what time you wake up.
@@ -108,7 +112,7 @@ API so that users can create their own applications
 **** TODO Find someone with a good quality video camera
 **** TODO Sell my microsoft surface pro for 400$
 **** TODO Get the kawaii plastic enclosure designed in a cad software for 3d printing
-**** TODO Buy a rpi 3, a 7 inch tft screen, sd card, and an rpi camera
+**** TODO Buy a rpi 3, a 5 inch tft screen, sd card, and an rpi camera
 **** TODO Install OS, Clojure, power supply and my library onto the rpi
 *** Sept 5, 2016 ~ Mon
 **** TODO 3d print the case for demo
@@ -121,3 +125,10 @@ API so that users can create their own applications
 **** TODO Make a list of the minimum feature set that must be included for the shipped product
 **** TODO Advertise product in blogs, news site, social media. 
 
+
+** Hardware
+*** RPi3
+*** Mic
+*** Screen
+*** Power
+*** SD card

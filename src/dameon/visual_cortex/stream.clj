@@ -1,9 +1,14 @@
 (ns dameon.visual-cortex.stream
   (require [dameon.smart-atom :as smart-atom]
-           [dameon.visual-cortex.face-recognition]
+           [dameon.visual-cortex.face-recognition :as face]
+           [dameon.voice.core :as voice]
            [clojure.spec :as s]
            [clojure.core.async :refer [go]]))
 
+(import '[org.opencv.core MatOfInt MatOfByte MatOfRect Mat CvType Size Scalar Rect]
+        '[org.opencv.imgproc Imgproc]
+        '[org.opencv.imgcodecs Imgcodecs]
+        '[org.opencv.objdetect CascadeClassifier])
 
 (defprotocol Stream
   "Unit of Visual Processing"
@@ -27,6 +32,7 @@
   [stream smart-mat & [the-time]]
   (if-let [stream (ready-to-update? stream the-time)]
     (let [data (gen-new-data stream smart-mat)]
+      (spit "face-detect-log" data :append true)
       (doall
        (map (fn [the-fn]
               (let [smart-atom-copy (smart-atom/copy (data :smart-mat))]
@@ -60,8 +66,28 @@
 
 
 (defrecord FaceDetectionStream [up-treams termini name]
-  
-  )
+  Stream
+  (gen-new-data [this smart-mat]
+    (let [faces (face/detect (smart-atom/deref smart-mat))]
+      (if (> (count faces) 0)
+        (do (voice/speak "I see you")
+            (let [new-mat (.clone (smart-atom/deref smart-mat))
+                  face (first faces)]
+              (smart-atom/delete smart-mat)
+              (Imgproc/rectangle new-mat (.tl face) (.br face) (Scalar. 0.0) 5)
+              {:smart-mat (smart-atom/create new-mat)}))
+        {:smart-mat smart-mat}))))
+
+
+
+
+
+
+
+
+
+
+
 
 
 

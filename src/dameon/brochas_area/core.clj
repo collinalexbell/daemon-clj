@@ -4,7 +4,18 @@
             [clojure.core.async :as async]
             [clojure.java.io :as io]))
 
-(import org.httpkit.BytesInputStream)
+(import org.httpkit.BytesInputStream
+        '[javax.sound.sampled
+          Port
+          AudioFileFormat
+          AudioFormat
+          TargetDataLine
+          DataLine$Info
+          AudioSystem
+          AudioInputStream])
+
+(def wave-type javax.sound.sampled.AudioFileFormat$Type/WAVE)
+
 
 
 (defn request-new-access-token []
@@ -52,11 +63,31 @@
     (clojure.java.io/copy (clojure.java.io/input-stream x) out)
     (.toByteArray out)))
 
-(defn interpret-speech []
-  (let [sound-bytes (slurp-bytes "/Users/collinbell/Downloads/hello.wav")
-        
+(defn stopper-thread [time line]
+  (Thread/sleep time)
+  (.stop line)
+  (.close line))
 
-        options 
+(defn record-audio
+  [time]
+  (let [file-name "speech-to-text.wav"
+        audio-format (AudioFormat. 16000 8 1 true true)
+        line-info (DataLine$Info. TargetDataLine audio-format)]
+    (if (not (AudioSystem/isLineSupported line-info))
+      (throw (Exception. "Audio line is not supported"))
+      (let [line (AudioSystem/getLine line-info)]
+        (.open line audio-format)
+        (.start line)
+        (async/go (stopper-thread time line))
+        (with-open [out (java.io.ByteArrayOutputStream.)]
+         (AudioSystem/write
+          (AudioInputStream. line)
+          wave-type
+          (java.io.File. file-name)))))
+    (slurp-bytes file-name)))
+
+(defn interpret-speech [sound-bytes]
+  (let [options 
         {:headers {"Authorization" (str "Bearer " (get-access-token))
                    "Content-type" "audio/wav; codec=\"audio/pcm\"; samplerate=16000"}
          :query-params {"scenarios" "smd"
@@ -69,6 +100,15 @@
                         "requestid" "98d31a6b-fbe3-4bbf-89cd-79287632315b"}
          :body (BytesInputStream. sound-bytes (count sound-bytes))}]
     (http/post "https://speech.platform.bing.com/recognize" options)))
+
+
+
+(defn interpret-recorded-speech [time]
+  (let [sound-bytes (record-audio time)]
+    (interpret-speech sound-bytes)))
+
+
+
 
 
 

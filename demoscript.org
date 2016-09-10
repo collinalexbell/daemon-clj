@@ -1,0 +1,56 @@
+* Demo Script
+
+Hi. My name is Collin and this is my dameon. 
+I have named it Rouge, which is french for red. 
+
+*** OK Rouge
+
+** Yes?
+
+*** Why did I create you? 
+
+** You created me because you wanted a conciousness to speak for your environment. You wanted your home to wake up.
+	 
+Ok, so everyone here knows that I just told it to say that. Nothing too intelligent here.
+
+Something interesting to note though, is that it knows me by my voice.
+
+My friend, , is here to demonstrate.
+(Friend walks in)
+
+*** OK Rouge
+
+** Yes?
+	
+*** Why did I create you?
+
+** You didn't create me, Collin did!
+
+The dameon uses Microsofts speaker recognition to determine who as speaking 
+as well as microsofts speech to text to translate the commands
+The responses are then passed to the Wit.AI API which generates a response which can be easily customized on their website.
+
+During my biological computation course in college I learned that complexity can emerge by combining simple components.
+The thing that emerges becomes more of the sum of the parts.
+
+Using Microsofts emotion detection API combined with the Twitter API, my dameon can read to me some encouraging messages
+my girlfriend sent to me a couple of weeks ago whenever I am sad.
+
+(Sad face)
+
+** Collin, do you need some encouragement?
+
+*** Sure
+
+** 
+
+
+
+
+
+
+
+
+
+
+

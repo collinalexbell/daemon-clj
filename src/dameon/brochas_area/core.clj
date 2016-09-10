@@ -4,8 +4,8 @@
             [clojure.data.json :as json]
             [clojure.core.async :as async]
             [clojure.java.io :as io]
-            [clojure.java.shell :as shell]))
-
+            [clojure.java.shell :as shell]
+            [dameon.prefrontal-cortex.input :as pfc]))
 
 (import org.httpkit.BytesInputStream
         '[javax.sound.sampled
@@ -104,11 +104,17 @@
          :body (BytesInputStream. sound-bytes (count sound-bytes))}]
     (http/post "https://speech.platform.bing.com/recognize" options)))
 
+(defn get-words-from-api-result [api-result]
+  (get-in (json/read-str (get api-result :body)) ["results" 0 "name"]))
 
 
-(defn interpret-recorded-speech [time]
-  (let [sound-bytes (record-audio time)]
-    (interpret-speech sound-bytes)))
+(defn record-and-interpret-speech [time]
+  (pfc/input
+   (let [sound-bytes (record-audio time)]
+     {:event :words
+      :from  :api
+      :data  (get-words-from-api-result
+              @(interpret-speech sound-bytes))})))
 
 
 
@@ -128,8 +134,11 @@
          #"\n"))))
 
 (defn sphinx-listener [line]
-  (if (re-find #"ok dag knee" line)
-    (voice/speak "Yes. I am listening")))
+  (println line)
+  (if (> (.indexOf line "ok dag knee") -1)
+    (pfc/input  {:event :words
+                 :from  :sphinx
+                 :data  "ok dagny"} )))
 
 (defn launch-sphinx-listener []
   (async/go
@@ -140,3 +149,13 @@
 (defn launch-sphinx []
   (launch-sphinx-dameon)
   (launch-sphinx-listener))
+
+
+
+
+
+
+
+
+
+

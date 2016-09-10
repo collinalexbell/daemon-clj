@@ -19,3 +19,5 @@
   (async/go (init-face))
   (async/go (init-eyes))
   (async/go (init-brochas-area)))
+
+(wake-up)

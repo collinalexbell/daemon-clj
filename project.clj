@@ -14,4 +14,7 @@
                  [clj-time "0.12.0"]
                  [google-apps-clj "0.5.2"]
                  [org.clojure/data.json "0.2.6"]
-                 [http-kit "2.2.0"]])
+                 [http-kit "2.2.0"]
+                 [edu.cmu.sphinx/sphinx4-core "5prealpha-SNAPSHOT"]
+                 [edu.cmu.sphinx/sphinx4-data "5prealpha-SNAPSHOT"]]
+ :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"})

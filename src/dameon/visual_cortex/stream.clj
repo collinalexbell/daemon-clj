@@ -70,8 +70,8 @@
   (gen-new-data [this smart-mat]
     (let [faces (face/detect (smart-atom/deref smart-mat))]
       (if (> (count faces) 0)
-        (do (voice/speak "I see you")
-            (let [new-mat (.clone (smart-atom/deref smart-mat))
+        (do
+          (let [new-mat (.clone (smart-atom/deref smart-mat))
                   face (first faces)]
               (smart-atom/delete smart-mat)
               (Imgproc/rectangle new-mat (.tl face) (.br face) (Scalar. 0.0) 5)

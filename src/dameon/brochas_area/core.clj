@@ -1,5 +1,6 @@
 (ns dameon.brochas-area.core
-  (:require [org.httpkit.client :as http]
+  (:require [dameon.voice.core :as voice]
+            [org.httpkit.client :as http]
             [clojure.data.json :as json]
             [clojure.core.async :as async]
             [clojure.java.io :as io]
@@ -111,10 +112,10 @@
 
 
 
-(defn readFile [file]
+(defn readFile [file listener]
   (with-open [rdr (clojure.java.io/reader file)]
     (doseq [line (line-seq rdr)]
-      (println line))))
+      (listener line))))
 
 (defn launch-sphinx-dameon []
   (async/go (shell/sh "sh" "src/dameon/brochas_area/launch_sphinx.sh")))
@@ -125,3 +126,17 @@
         (clojure.string/split
          (get (shell/sh "src/dameon/brochas_area/get_pid.sh") :out)
          #"\n"))))
+
+(defn sphinx-listener [line]
+  (if (re-find #"ok dag knee" line)
+    (voice/speak "Yes. I am listening")))
+
+(defn launch-sphinx-listener []
+  (async/go
+    (readFile
+    (str (System/getProperty "user.dir") "/src/dameon/brochas_area/pipe")
+    sphinx-listener)))
+
+(defn launch-sphinx []
+  (launch-sphinx-dameon)
+  (launch-sphinx-listener))

@@ -27,7 +27,7 @@
 (defn load-emotions []
   (apply merge (map
     (fn [emot] {emot (animation/new emot)})
-    available-emotions)))
+    settings/available-emotions)))
 
 (defn setup []
   (q/frame-rate 1)
@@ -111,12 +111,13 @@
   
 ;(go (>! "Hello there"))
 
-(q/defsketch dameon-face
-  :size [width height]
-  :setup setup
-  :update update-state
-  :draw draw
-  :middleware [m/fun-mode])
+(defn create []
+ (q/defsketch dameon-face
+   :size [width height]
+   :setup setup
+   :update update-state
+   :draw draw
+   :middleware [m/fun-mode]))
 
 
 

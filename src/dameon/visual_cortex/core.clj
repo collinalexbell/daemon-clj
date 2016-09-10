@@ -12,10 +12,7 @@
         '[org.opencv.objdetect CascadeClassifier])
 
 
-;;start the eyes.
 (def tree (atom (stree/create)))
-
-(def eye-thread (eyes/see tree))
 
 (def stream-on-face-running (ref false))
 
@@ -49,7 +46,3 @@
   (face/deactivate-mat-display)
   (def tree (atom (stree/create))))
 
-(stop-display-basic-vision)
-(display-face-detect)
-(eyes/see tree)
-(eyes/stop-seeing)

@@ -24,9 +24,6 @@
 (def in-main-loop? (ref false))
 
 
-(def available-emotions
-  [:happy :sad :determined :confused :exuberant])
-
 (defn load-emotions []
   (apply merge (map
     (fn [emot] {emot (animation/new emot)})
@@ -128,7 +125,7 @@
    If keyword argument :block is set true, then the function will wait until the animation is in the :emotion-loop to return"
   [emotion & {:keys [block] :or {block false}}]
   (dosync (ref-set in-main-loop? false))
-  (if (> (.indexOf available-emotions emotion) -1)
+  (if (> (.indexOf settings/available-emotions emotion) -1)
     (dosync (ref-set transitioner emotion))
     (throw (Exception. "This emotion is not available")))
   (if block

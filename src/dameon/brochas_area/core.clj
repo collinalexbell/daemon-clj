@@ -2,7 +2,9 @@
   (:require [org.httpkit.client :as http]
             [clojure.data.json :as json]
             [clojure.core.async :as async]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.java.shell :as shell]))
+
 
 (import org.httpkit.BytesInputStream
         '[javax.sound.sampled
@@ -42,7 +44,7 @@
   (swap! access-token
          (fn [ignore]
            (parse-access-token-response-body
-            (get @(request-access-token) :body)))))
+            (get @(request-new-access-token) :body)))))
 
 ;;Get the initial access token
 (async/go (set-new-access-token) (swap! initialized (constantly true)))
@@ -109,19 +111,17 @@
 
 
 
+(defn readFile [file]
+  (with-open [rdr (clojure.java.io/reader file)]
+    (doseq [line (line-seq rdr)]
+      (println line))))
 
+(defn launch-sphinx-dameon []
+  (async/go (shell/sh "sh" "src/dameon/brochas_area/launch_sphinx.sh")))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+(defn kill-sphinx-dameon []
+  (doall
+   (map #(shell/sh "kill" "-9" %)
+        (clojure.string/split
+         (get (shell/sh "src/dameon/brochas_area/get_pid.sh") :out)
+         #"\n"))))

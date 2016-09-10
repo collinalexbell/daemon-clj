@@ -48,3 +48,8 @@
 (defn stop-display-basic-vision []
   (face/deactivate-mat-display)
   (def tree (atom (stree/create))))
+
+(stop-display-basic-vision)
+(display-face-detect)
+(eyes/see tree)
+(eyes/stop-seeing)

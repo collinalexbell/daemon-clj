@@ -16,5 +16,18 @@
                  [org.clojure/data.json "0.2.6"]
                  [http-kit "2.2.0"]
                  [edu.cmu.sphinx/sphinx4-core "5prealpha-SNAPSHOT"]
-                 [edu.cmu.sphinx/sphinx4-data "5prealpha-SNAPSHOT"]]
- :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"})
+                 [edu.cmu.sphinx/sphinx4-data "5prealpha-SNAPSHOT"]
+                 [org.twitter4j/twitter4j-core "[4.0,)"]
+                 [org.twitter4j/twitter4j-stream "[4.0,)"]]
+  :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"}
+  :plugins [[lein-ns-dep-graph "0.1.0-SNAPSHOT"]])
+
+
+
+
+
+
+
+
+
+

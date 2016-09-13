@@ -1,7 +1,9 @@
 (ns dameon.prefrontal-cortex.core
   (:require [dameon.voice.core :as voice]
             [dameon.brochas-area.core :as brochas-area]
-            [dameon.temporal-lobe.calendar :as cal]))
+            [dameon.temporal-lobe.calendar :as cal]
+            [dameon.temporal-lobe.twitter :as twitter]))
+
 
 (def possible-actions (atom {}))
 
@@ -9,14 +11,24 @@
   (swap! possible-actions (fn [a] (assoc a goal (conj (get a goal) action)))))
 
 
+;;This is limiting. Sometimes there isn't a best actions
+;;Sometimes there are 2 mutually exclusive actions that should be taken at once
 (defn do-best-action [cur-state goal]
   ((first (get @possible-actions goal)) cur-state))
 
+
+
+;;;Comine input with state and make it into new state
+;;;Then pass the new state to pfc/handle-state-change
 (defn input [the-input]
   (if (= (get the-input :event) :words)
-    (do-best-action the-input :listen-intently)))
-;; The dameon has seen my face, it wants to please me, so it decides it is a good idea to greet me
+    (case (get the-input :from)
+      :sphinx (do-best-action the-input :listen-intently)
+      :api    (do (println the-input) (do-best-action the-input :act-on-speech)))))
 
+(brochas-area/launch-sphinx input)
+
+(twitter/notify-me-if :collinalexbell :messages-me)
 
 (defn init []
   (add-possible-actions
@@ -35,6 +47,9 @@
      (voice/speak (cal/event-list-to-string (cal/get-todays-events) "today")))))
 
 (init)
+
+
+
 
 
 

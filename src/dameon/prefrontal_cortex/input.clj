@@ -1,13 +1,16 @@
 (ns dameon.prefrontal-cortex.input
-  (require [dameon.prefrontal-cortex.core :as pfc]))
+  (require [dameon.prefrontal-cortex.core :as pfc]
+           [dameon.brochas-area.core :as brochas-area]))
 
-(defn input [the-input]
-  (if (= (get the-input :event) :words)
-    (pfc/do-best-action the-input :listen-intently)))
 
-(input {:event :words
-        :from  :sphinx
-        :data  "ok dagny"})
+
+
+
+
+
+
+
+
 
 
 

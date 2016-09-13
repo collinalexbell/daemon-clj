@@ -13,3 +13,4 @@ cerevoice/
 *~
 *#
 *.log
+creds.edn

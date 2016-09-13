@@ -4,8 +4,8 @@
             [clojure.data.json :as json]
             [clojure.core.async :as async]
             [clojure.java.io :as io]
-            [clojure.java.shell :as shell]
-            [dameon.prefrontal-cortex.input :as pfc]))
+            [clojure.java.shell :as shell]))
+
 
 (import org.httpkit.BytesInputStream
         '[javax.sound.sampled
@@ -108,8 +108,8 @@
   (get-in (json/read-str (get api-result :body)) ["results" 0 "name"]))
 
 
-(defn record-and-interpret-speech [time]
-  (pfc/input
+(defn record-and-interpret-speech [time callback]
+  (callback
    (let [sound-bytes (record-audio time)]
      {:event :words
       :from  :api
@@ -133,22 +133,22 @@
          (get (shell/sh "src/dameon/brochas_area/get_pid.sh") :out)
          #"\n"))))
 
-(defn sphinx-listener [line]
-  (println line)
-  (if (> (.indexOf line "ok dag knee") -1)
-    (pfc/input  {:event :words
-                 :from  :sphinx
-                 :data  "ok dagny"} )))
+(defn gen-sphinx-listener [callback]
+ (fn [line]
+   (if (> (.indexOf line "okay listen to me") -1)
+     (callback  {:event :words
+                  :from  :sphinx
+                  :data  "okay listen to me"} ))))
 
-(defn launch-sphinx-listener []
+(defn launch-sphinx-listener [callback]
   (async/go
     (readFile
     (str (System/getProperty "user.dir") "/src/dameon/brochas_area/pipe")
-    sphinx-listener)))
+    (gen-sphinx-listener callback))))
 
-(defn launch-sphinx []
+(defn launch-sphinx [callback]
   (launch-sphinx-dameon)
-  (launch-sphinx-listener))
+  (launch-sphinx-listener callback))
 
 
 

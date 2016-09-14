@@ -23,6 +23,20 @@
 (def mat-to-draw (ref (Mat. width height CvType/CV_8UC3)))
 (def in-main-loop? (ref false))
 
+(defn has-extension [the-str ext]
+  (> (.indexOf the-str (str "." ext)) -1))
+
+(def available-emotion-keys 
+  (map
+   (fn [emt-str]
+     (keyword (first (clojure.string/split emt-str #".gif"))))
+   (filter
+    #(has-extension % "gif")
+    (map
+     #(.getName %)
+     (filter
+      #(.isFile %)
+      (.listFiles (clojure.java.io/file "face_animations")))))))
 
 (defn load-emotions []
   (apply merge (map

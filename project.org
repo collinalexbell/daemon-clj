@@ -133,14 +133,20 @@ API so that users can create their own applications
 		 CLOSED: [2016-09-12 Mon 10:41]
 **** DONE Buy a rpi 3, a 5 inch tft screen, sd card, and an rpi camera
 		 CLOSED: [2016-09-12 Mon 10:41]
-**** TODO Install OS, Clojure, power supply and my library onto the rpi
+**** DONE Install OS, Clojure, power supply and my library onto the rpi
+		 CLOSED: [2016-09-13 Tue 03:25]
 *** Sept 5, 2016 ~ Mon
-**** TODO 3d print the case for demo
+**** DONE 3d print the case for demo
+		 CLOSED: [2016-09-14 Wed 03:53]
 **** TODO Edit demo video
 **** TODO Set up demo in their home and record
-**** TODO Source 650 units of all of the hardware and determine complete cost
-**** TODO Determine shipping cost both domestic and international. (International taxes?)
-**** TODO Create Kickstarter Rewards scheme
+**** DONE Source 650 units of all of the hardware and determine complete cost
+		 CLOSED: [2016-09-14 Wed 03:53]
+**** DONE Determine shipping cost both domestic and international. (International taxes?)
+		 CLOSED: [2016-09-14 Wed 03:53]
+**** 20$, 
+**** DONE Create Kickstarter Rewards scheme
+		 CLOSED: [2016-09-14 Wed 03:53]
 *** Sept 6, 2016 ~ Tues
 **** TODO Make a list of the minimum feature set that must be included for the shipped product
 **** TODO Advertise product in blogs, news site, social media. 
@@ -209,6 +215,12 @@ API so that users can create their own applications
 		 CLOSED: [2016-09-10 Sat 08:42]
 *** Sept 10, 2016
 **** Get the data structure of calendar events
+
+*** Sept 14, 2016
+**** DONE Turn the gifs into sprites
+		 CLOSED: [2016-09-14 Wed 20:14]
+
+**** TODO Load the gifs into frames
 ** Hardware
 *** RPi3
 *** Mic

@@ -5,7 +5,8 @@
    [dameon.smart-atom :as smart-atom]
    [quil.core :as q]
    [quil.middleware :as m]
-   [clojure.core.async :as async :refer [go chan <! >!]]))
+   [clojure.core.async :as async :refer [go chan <! >!]]
+   [clojure.java.shell :as shell]))
 
 (import '[org.opencv.core MatOfInt MatOfByte MatOfRect Mat CvType Size]
         '[org.opencv.imgcodecs Imgcodecs]
@@ -26,54 +27,61 @@
 (defn has-extension [the-str ext]
   (> (.indexOf the-str (str "." ext)) -1))
 
+(defn get-ext-filenames [folder ext]
+  (filter
+   #(has-extension % ext)
+   (map
+    #(.getName %)
+    (filter
+     #(.isFile %)
+     (.listFiles (clojure.java.io/file folder))))))
+
+(defn turn-gifs-in-folder-into-sprites [folder]
+  (let [emotion-names (map
+                       #(first (clojure.string/split % #".gif"))
+                       (get-ext-filenames folder "gif"))]
+    (doall (map #(shell/sh "mkdir" (str folder "/" % )) emotion-names))
+    (doall (map #(shell/sh
+            "convert"
+            "-coalesce"
+            (str folder "/" % ".gif")
+            (str folder "/" (str % "/%02d.png")))
+          emotion-names))))
+
 (def available-emotion-keys 
   (map
-   (fn [emt-str]
-     (keyword (first (clojure.string/split emt-str #".gif"))))
-   (filter
-    #(has-extension % "gif")
-    (map
-     #(.getName %)
-     (filter
-      #(.isFile %)
-      (.listFiles (clojure.java.io/file "face_animations")))))))
+   #(keyword (.getName %))
+    (filter
+     #(not (.isFile %))
+     ;;all folders and files
+     (.listFiles (clojure.java.io/file settings/face-animation-folder)))))
 
 (defn load-emotions []
   (apply merge (map
     (fn [emot] {emot (animation/new emot)})
-    settings/available-emotions)))
+    available-emotion-keys)))
 
 (defn setup []
-  (q/frame-rate 1)
+  (q/frame-rate 2)
   (q/background 255)
-  (let [anim (q/load-image "face_animations/Happy/neutral_to_emotion.png")]
-    (q/resize anim  (* 4 width) height)
-    {:x 1 :animation anim :emotions (load-emotions) :cur-index 0 :transition-emotion :happy :cur-emotion :happy}))
+  (let [animations (load-emotions)]
+    {:emotions animations :cur-emotion :happy}))
 
 (defn update-state [state]
-  (q/frame-rate 10)
+  (q/frame-rate 2)
   (if (not (nil? @transitioner))
+    ;;transition
     (let [transition-emotion @transitioner]
       (do
        (dosync (ref-set transitioner nil))
-       (assoc
-        (assoc-in state
-                  [:emotions (state :cur-emotion)]
-                  (animation/transition-out-of (get-in state [:emotions (state :cur-emotion)])))
-        :transition-emotion transition-emotion)))
-    (if (not ((get-in state [:emotions (state :cur-emotion)]) :finished))
-      (do
-        (if (= (get-in state [:emotions (state :cur-emotion) :cur-animation]) :emotion-loop)
-          (dosync (ref-set in-main-loop? true)))
-        (assoc-in state
-                [:emotions (state :cur-emotion)]
-                (animation/next-frame (get-in state [:emotions (state :cur-emotion)]))))
-     (assoc
-      (assoc-in state
-                [:emotions (state :transition-emotion)]
-                (animation/transition-into (get-in state [:emotions (state :transition-emotion)])))
-       :cur-emotion
-       (state :transition-emotion)))))
+       (-> state
+           (assoc-in [:emotions transition-emotion]
+                     (animation/reset (get-in state [:emotions transition-emotion])))
+           (assoc :cur-emotion transition-emotion))))
+    ;;or just get the next state
+    (assoc-in state
+              [:emotions (state :cur-emotion)]
+              (animation/next-frame (get-in state [:emotions (state :cur-emotion)])))))
 
 (defn mat-to-p-image [mat]
   (let [w (.width mat)
@@ -134,13 +142,12 @@
    :middleware [m/fun-mode]))
 
 
-
 (defn change-emotion
   "Function used to change the emotion displayed of the face. 
    If keyword argument :block is set true, then the function will wait until the animation is in the :emotion-loop to return"
   [emotion & {:keys [block] :or {block false}}]
   (dosync (ref-set in-main-loop? false))
-  (if (> (.indexOf settings/available-emotions emotion) -1)
+  (if (> (.indexOf available-emotion-keys emotion) -1)
     (dosync (ref-set transitioner emotion))
     (throw (Exception. "This emotion is not available")))
   (if block

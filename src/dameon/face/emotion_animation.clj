@@ -2,8 +2,6 @@
   (require [quil.core :as q]
            [dameon.settings :as settings]))
 
-(def width settings/width)
-(def height settings/height)
 
 (defn load-sprite-files
   "Returns a map with the loaded sprite files that were loaded using quill.core/image-load"
@@ -12,7 +10,7 @@
   (if-let [emotion-folder (str settings/face-animation-folder "/" (name emotion-key))]
     (map 
      #(let [img (q/load-image (str emotion-folder "/" %))]
-        (q/resize img width height)
+        (q/resize img (int (/ 1024 1.2)) (int (/ 600 1.2)))
         img)
      ;;vector of image paths in emotion-folder
      (map #(.getName %) (.listFiles (clojure.java.io/file emotion-folder))))

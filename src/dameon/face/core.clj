@@ -16,13 +16,12 @@
 (import 'java.nio.ByteBuffer)
 (import 'java.nio.ByteOrder)
 
-(def width settings/width)
-(def height settings/height)
 
 (def transitioner (ref nil))
 (def draw-mat? (ref false))
-(def mat-to-draw (ref (Mat. width height CvType/CV_8UC3)))
+(def mat-to-draw (ref (Mat. settings/width settings/height CvType/CV_8UC3)))
 (def in-main-loop? (ref false))
+(def cur-emotion (ref nil))
 
 (defn has-extension [the-str ext]
   (> (.indexOf the-str (str "." ext)) -1))
@@ -65,6 +64,7 @@
   (q/frame-rate 2)
   (q/background 255)
   (let [animations (load-emotions)]
+    (dosync (ref-set cur-emotion :happy))
     {:emotions animations :cur-emotion :happy}))
 
 (defn update-state [state]
@@ -106,10 +106,10 @@
   (try
     (let [mat
          (if (= (.size (smart-atom/deref smart-mat))
-                (Size. width height))
+                (Size. settings/width settings/height))
            (.clone (deref smart-mat))
            (let [tmp-mat (.clone (smart-atom/deref smart-mat))]
-             (. Imgproc resize (smart-atom/deref smart-mat) tmp-mat (Size. width height))
+             (. Imgproc resize (smart-atom/deref smart-mat) tmp-mat (Size. settings/width settings/height))
              tmp-mat))]
       (smart-atom/delete smart-mat)
       (let [old-mat @mat-to-draw]
@@ -128,14 +128,14 @@
   (q/background 0)
   (if @draw-mat?
     (draw-mat @mat-to-draw)
-    (q/image (animation/get-cur-frame (get-in state [:emotions (state :cur-emotion)]))  0 0))
+    (q/image (animation/get-cur-frame (get-in state [:emotions (state :cur-emotion)]))  -139 -25))
   (q/fill 255))
   
 ;(go (>! "Hello there"))
 
 (defn create []
  (q/defsketch dameon-face
-   :size [width height]
+   :size [600 450]
    :setup setup
    :update update-state
    :draw draw
@@ -148,9 +148,11 @@
   [emotion & {:keys [block] :or {block false}}]
   (dosync (ref-set in-main-loop? false))
   (if (> (.indexOf available-emotion-keys emotion) -1)
-    (dosync (ref-set transitioner emotion))
+    (dosync (ref-set transitioner emotion)
+            (ref-set cur-emotion emotion))
     (throw (Exception. "This emotion is not available")))
   (if block
     (while (not @in-main-loop?))))
 
-
+(defn get-cur-emotion []
+  @cur-emotion)

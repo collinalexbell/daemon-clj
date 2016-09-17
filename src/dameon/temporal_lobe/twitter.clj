@@ -21,7 +21,7 @@
         (spit "foo" {:sender (.getSenderScreenName msg)
                      :createdAt (.getCreatedAt msg)
                      :recipient (.getRecipientScreenName msg)
-                     :text (.getText msg)}))))))
+                     :text (.getText msg)})))))
 
 
 @current-listener-code

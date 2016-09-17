@@ -1,5 +1,6 @@
 (ns dameon.brochas-area.core
-  (:require [dameon.voice.core :as voice]
+  (:require [dameon.face.core :as face]
+            [dameon.voice.core :as voice]
             [org.httpkit.client :as http]
             [clojure.data.json :as json]
             [clojure.core.async :as async]
@@ -66,8 +67,9 @@
     (clojure.java.io/copy (clojure.java.io/input-stream x) out)
     (.toByteArray out)))
 
-(defn stopper-thread [time line]
+(defn stopper-thread [time line return-emot]
   (Thread/sleep time)
+  (face/change-emotion return-emot)
   (.stop line)
   (.close line))
 
@@ -80,8 +82,10 @@
       (throw (Exception. "Audio line is not supported"))
       (let [line (AudioSystem/getLine line-info)]
         (.open line audio-format)
-        (.start line)
-        (async/go (stopper-thread time line))
+        (let [return-emot (face/get-cur-emotion)]
+          (face/change-emotion :listen)
+          (.start line)
+          (async/go (stopper-thread time line return-emot)))
         (with-open [out (java.io.ByteArrayOutputStream.)]
          (AudioSystem/write
           (AudioInputStream. line)
@@ -110,11 +114,17 @@
 
 (defn record-and-interpret-speech [time callback]
   (callback
-   (let [sound-bytes (record-audio time)]
-     {:event :words
-      :from  :api
-      :data  (get-words-from-api-result
-              @(interpret-speech sound-bytes))})))
+   (let [sound-bytes (record-audio time)
+         return-emot (face/get-cur-emotion)]
+     (face/change-emotion :understand)
+     (let
+         [rv 
+          {:event :words
+           :from  :api
+           :data  (get-words-from-api-result
+                   @(interpret-speech sound-bytes))}]
+       (face/change-emotion return-emot)
+       rv))))
 
 
 

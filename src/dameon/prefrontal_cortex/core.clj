@@ -28,17 +28,18 @@
 
 (brochas-area/launch-sphinx input)
 
-(twitter/notify-me-if :collinalexbell :messages-me)
+;;(twitter/notify-me-if :collinalexbell :messages-me)
 
 (defn init []
   (add-possible-actions
    :listen-intently
    (fn [cur-state]
      (voice/speak "I am listening")
-     (brochas-area/record-and-interpret-speech 5000)))
+     (brochas-area/record-and-interpret-speech 5000 input)))
   (add-possible-actions
    :act-on-speech
    (fn [cur-state]
+     (println "acting on speech")
      (if (> (.indexOf (:data cur-state) "calendar") -1)
        (do-best-action nil :tell-me-todays-events))))
   (add-possible-actions

@@ -34,6 +34,12 @@
   (swap! (a :smart-object-atom) smart-object/pointer-copied)
   a)
 
+(defn deep-clone
+  "Returns a new smart atom with a clone of the object the smart atom refers to"
+  [a]
+  (println (class a))
+  (create (.clone (deref a))))
+
 (defn delete
   "Makes this copy of the atom inactive.
   When all copies of the atom are inactive the object will be deallocated from native memory."

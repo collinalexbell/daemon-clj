@@ -16,10 +16,11 @@
 (import 'java.nio.ByteBuffer)
 (import 'java.nio.ByteOrder)
 
-
+(def animation-frame-rate 2)
 (def transitioner (ref nil))
+(def frame-rate (ref 2))
 (def draw-mat? (ref false))
-(def mat-to-draw (ref (Mat. settings/width settings/height CvType/CV_8UC3)))
+(def smart-mat-to-draw (ref (smart-atom/create (Mat. settings/width settings/height CvType/CV_8UC3))))
 (def in-main-loop? (ref false))
 (def cur-emotion (ref nil))
 
@@ -61,14 +62,14 @@
     available-emotion-keys)))
 
 (defn setup []
-  (q/frame-rate 2)
+  (q/frame-rate animation-frame-rate)
   (q/background 255)
   (let [animations (load-emotions)]
     (dosync (ref-set cur-emotion :happy))
     {:emotions animations :cur-emotion :happy}))
 
 (defn update-state [state]
-  (q/frame-rate 2)
+  (q/frame-rate @frame-rate)
   (if (not (nil? @transitioner))
     ;;transition
     (let [transition-emotion @transitioner]
@@ -104,30 +105,45 @@
 
 (defn update-mat-to-display [smart-mat]
   (try
-    (let [mat
+    (let [new-smart-mat-to-draw
          (if (= (.size (smart-atom/deref smart-mat))
                 (Size. settings/width settings/height))
-           (.clone (deref smart-mat))
-           (let [tmp-mat (.clone (smart-atom/deref smart-mat))]
-             (. Imgproc resize (smart-atom/deref smart-mat) tmp-mat (Size. settings/width settings/height))
-             tmp-mat))]
+           ;return a copy of the smart mat if no changes need to be made to the mat
+           smart-mat
+           ;;if changes do need to be made, the smart mat must be deep-cloned to get a brand new matrix
+           ;;this is because other processes have access to the matrix and we don't want to alter it
+           (let [new-smart-mat (smart-atom/deep-clone smart-mat)]
+             (. Imgproc resize
+                (smart-atom/deref new-smart-mat)
+                (smart-atom/deref new-smart-mat)
+                (Size. settings/width settings/height))
+             new-smart-mat))]
       (smart-atom/delete smart-mat)
-      (let [old-mat @mat-to-draw]
-        (dosync (ref-set mat-to-draw mat))
-        (.release old-mat)))
+      (let [old-smart-mat @smart-mat-to-draw]
+        ;;set the new smart-mat-to-draw
+        (dosync (ref-set smart-mat-to-draw new-smart-mat-to-draw))
+        ;;since the smart-mat-to-draw reference has changed, we need to smart-mat/delete the old smart-mat
+        (smart-atom/delete old-smart-mat)))
     (catch Exception e (println (str (.getMessage e))))))
 
 (defn activate-mat-display []
-  (dosync (ref-set draw-mat? true)))
+  (dosync (ref-set draw-mat? true)
+          (ref-set frame-rate 30)))
 
 (defn deactivate-mat-display []
-  (dosync (ref-set draw-mat? false)))
+  (dosync (ref-set draw-mat? false)
+          (ref-set frame-rate animation-frame-rate)))
 
 
 (defn draw [state]
   (q/background 0)
   (if @draw-mat?
-    (draw-mat @mat-to-draw)
+    ;;increment the copy counter so the mat doesn't get released mid display
+    (do
+      (smart-atom/copy @smart-mat-to-draw)
+      (draw-mat (smart-atom/deref @smart-mat-to-draw))
+      ;;decrement the copy counter so the mat can get released if the smart-mat-to-draw has been updated
+      (smart-atom/delete @smart-mat-to-draw))
     (q/image (animation/get-cur-frame (get-in state [:emotions (state :cur-emotion)]))  -139 -25))
   (q/fill 255))
   

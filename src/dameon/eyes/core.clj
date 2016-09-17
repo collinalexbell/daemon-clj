@@ -69,12 +69,14 @@
                       CvType/CV_8UC3)]
 
                  (.read video-feed buf)
-                 (doall
-                  (map #(go (vis-stream/update-mat
-                             %
-                             (smart-atom/create buf)
-                             (. System currentTimeMillis)))
-                       (stree/get-roots @stream-tree)))
+                 (if (= 0 (count (stree/get-roots @stream-tree)))
+                   (.release buf)
+                   (doall
+                    (map #(go (vis-stream/update-mat
+                               %
+                               (smart-atom/create buf)
+                               (. System currentTimeMillis)))
+                         (stree/get-roots @stream-tree))))
                  (if (> (. System currentTimeMillis) (+ @time-since-last-gc (* 1000 60 gc-freq-in-mins)))
                    (do
                      (. System gc)

@@ -16,6 +16,7 @@
 (import 'java.nio.ByteBuffer)
 (import 'java.nio.ByteOrder)
 
+(def old-drawn-smart-mat (ref (smart-atom/create (Mat. settings/width settings/height CvType/CV_8UC3))))
 (def animation-frame-rate 2)
 (def transitioner (ref nil))
 (def frame-rate (ref 2))
@@ -100,8 +101,15 @@
     (.updatePixels image)
     image))
 
-(defn draw-mat [mat]
-  (q/image (mat-to-p-image mat) 0 0 ))
+(defn draw-mat [smart-mat]
+
+  ;;increment the copy counter so the mat doesn't get released mid display
+  (smart-atom/copy smart-mat)
+  (q/image (mat-to-p-image (smart-atom/deref smart-mat)) 0 700 )
+
+  ;;decrement the copy counter so the mat can get released if the smart-mat-to-draw has been updated
+  (smart-atom/delete @old-drawn-smart-mat)
+  (dosync (ref-set old-drawn-smart-mat smart-mat)))
 
 (defn update-mat-to-display [smart-mat]
   (try
@@ -109,15 +117,16 @@
          (if (= (.size (smart-atom/deref smart-mat))
                 (Size. settings/width settings/height))
            ;return a copy of the smart mat if no changes need to be made to the mat
-           smart-mat
+           (smart-atom/copy smart-mat)
            ;;if changes do need to be made, the smart mat must be deep-cloned to get a brand new matrix
            ;;this is because other processes have access to the matrix and we don't want to alter it
            (let [new-smart-mat (smart-atom/deep-clone smart-mat)]
-             (. Imgproc resize
+             (Imgproc/resize
                 (smart-atom/deref new-smart-mat)
                 (smart-atom/deref new-smart-mat)
                 (Size. settings/width settings/height))
              new-smart-mat))]
+      ;;decrement the smart mat reference counter
       (smart-atom/delete smart-mat)
       (let [old-smart-mat @smart-mat-to-draw]
         ;;set the new smart-mat-to-draw
@@ -138,24 +147,26 @@
 (defn draw [state]
   (q/background 0)
   (if @draw-mat?
-    ;;increment the copy counter so the mat doesn't get released mid display
-    (do
-      (smart-atom/copy @smart-mat-to-draw)
-      (draw-mat (smart-atom/deref @smart-mat-to-draw))
-      ;;decrement the copy counter so the mat can get released if the smart-mat-to-draw has been updated
-      (smart-atom/delete @smart-mat-to-draw))
-    (q/image (animation/get-cur-frame (get-in state [:emotions (state :cur-emotion)]))  -139 -25))
+      (draw-mat @smart-mat-to-draw))
+  (q/image (animation/get-cur-frame (get-in state [:emotions (state :cur-emotion)]))  -80 -5)
   (q/fill 255))
   
 ;(go (>! "Hello there"))
 
 (defn create []
  (q/defsketch dameon-face
-   :size [600 450]
+   :size [200 200]
    :setup setup
    :update update-state
    :draw draw
    :middleware [m/fun-mode]))
+
+(defn apple-script [script]
+  (try
+   (-> (ScriptEngineManager.)
+       (.getEngineByName "AppleScript")
+       (.eval script))
+   (catch Exception e (println (.getMessage e)))))
 
 
 (defn change-emotion

@@ -37,7 +37,6 @@
 (defn deep-clone
   "Returns a new smart atom with a clone of the object the smart atom refers to"
   [a]
-  (println (class a))
   (create (.clone (deref a))))
 
 (defn delete

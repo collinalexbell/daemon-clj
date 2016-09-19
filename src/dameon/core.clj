@@ -1,13 +1,24 @@
 (ns dameon.core
   (require [dameon.voice.core :as voice]
+           [dameon.brochas-area.core :as brochas-area]
+           [dameon.prefrontal-cortex.core :as prefrontal-cortex]
            [clj-time.core :as t]
            [clj-time.coerce :as c]
            [overtone.at-at :as at-at]
            [dameon.face.core :as face]
            [dameon.visual-cortex.core :as visual-cortex]
-           [clojure.core.async :as async]))
+           [dameon.eyes.core :as eyes]
+           [clojure.core.async :as async]
+           [dameon.smart-atom :as smart-atom]))
 
 (import '[java.util.Timer])
+
+(defn init []
+  (face/create)
+  (eyes/see visual-cortex/tree)
+  (brochas-area/launch-sphinx-dameon))
+
+(init)
 
 (defn greet-person-if-seen []
   (async/go

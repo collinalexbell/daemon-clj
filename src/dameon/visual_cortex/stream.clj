@@ -75,8 +75,8 @@
                   face (first faces)]
               (smart-atom/delete smart-mat)
               (Imgproc/rectangle new-mat (.tl face) (.br face) (Scalar. 0.0) 5)
-              {:smart-mat (smart-atom/create new-mat)}))
-        {:smart-mat smart-mat}))))
+              {:smart-mat (smart-atom/create new-mat) :faces faces}))
+        {:smart-mat smart-mat :faces faces}))))
 
 
 

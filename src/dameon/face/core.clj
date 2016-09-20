@@ -161,13 +161,6 @@
    :draw draw
    :middleware [m/fun-mode]))
 
-(defn apple-script [script]
-  (try
-   (-> (ScriptEngineManager.)
-       (.getEngineByName "AppleScript")
-       (.eval script))
-   (catch Exception e (println (.getMessage e)))))
-
 
 (defn change-emotion
   "Function used to change the emotion displayed of the face. 

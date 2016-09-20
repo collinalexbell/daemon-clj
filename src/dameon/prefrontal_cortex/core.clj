@@ -2,6 +2,7 @@
   (:require [dameon.voice.core :as voice]
             [dameon.visual-cortex.core :as visual-cortex]
             [dameon.brochas-area.core :as brochas-area]
+            [dameon.visual-cortex.youtube-player :as youtube-player]
             [dameon.temporal-lobe.calendar :as cal]
             [dameon.eyes.core :as eyes]))
 
@@ -52,7 +53,10 @@
    (fn [cur-state]
      (println "acting on speech")
      (if (> (.indexOf (:data cur-state) "calendar") -1)
-       (do-best-action nil :tell-me-todays-events))))
+       (do-best-action nil :tell-me-todays-events))
+     (if (> (.indexOf (:data cur-state "play") -1))
+       (youtube-player/play-most-popular-by-search-term
+        (clojure.string/replace (:data cur-state) #"play" "")))))
   (add-possible-actions
    :tell-me-todays-events
    (fn [cur-state]

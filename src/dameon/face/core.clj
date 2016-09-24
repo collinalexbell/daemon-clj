@@ -1,5 +1,6 @@
 (ns dameon.face.core
   (require
+   [dameon.face.repl :as repl]
    [dameon.face.emotion-animation :as animation]
    [dameon.settings :as settings]
    [dameon.smart-atom :as smart-atom]
@@ -21,9 +22,7 @@
 (def restore-height (atom settings/height))
 (def emot-buffer (atom :happy))
 (def old-drawn-smart-mat (ref (smart-atom/create (Mat. @settings/width @settings/height CvType/CV_8UC3))))
-(def animation-frame-rate 2)
 (def transitioner (ref nil))
-(def frame-rate (ref 2))
 (def draw-mat? (ref false))
 (def smart-mat-to-draw (ref (smart-atom/create (Mat. @settings/width @settings/height CvType/CV_8UC3))))
 (def in-main-loop? (ref false))
@@ -68,27 +67,38 @@
 
 (defn setup []
   (q/image-mode :center)
-  (q/frame-rate animation-frame-rate)
+  (q/frame-rate settings/animation-frame-rate)
   (q/background 255)
   (let [animations (load-emotions)]
     (dosync (ref-set cur-emotion :happy))
-    {:emotions animations :cur-emotion :happy}))
+    {:emotions animations :cur-emotion :happy :cur-frame-no 0 :repl-text "" :keyboard-state {}}))
+
 
 (defn update-state [state]
-  (q/frame-rate @frame-rate)
-  (if (not (nil? @transitioner))
-    ;;transition
-    (let [transition-emotion @transitioner]
-      (do
-       (dosync (ref-set transitioner nil))
-       (-> state
-           (assoc-in [:emotions transition-emotion]
-                     (animation/reset (get-in state [:emotions transition-emotion])))
-           (assoc :cur-emotion transition-emotion))))
-    ;;or just get the next state
-    (assoc-in state
-              [:emotions (state :cur-emotion)]
-              (animation/next-frame (get-in state [:emotions (state :cur-emotion)])))))
+  (q/frame-rate @settings/frame-rate)
+  (->
+   (let [every-x-frame (/ @settings/frame-rate settings/animation-frame-rate)]
+     (if (= (mod (state :cur-frame-no) every-x-frame) 0)
+      (if (not (nil? @transitioner))
+       ;;transition
+       (let [transition-emotion @transitioner]
+         (do
+           (dosync (ref-set transitioner nil))
+           (-> state
+               (assoc-in [:emotions transition-emotion]
+                         (animation/reset (get-in state [:emotions transition-emotion])))
+               (assoc :cur-emotion transition-emotion))))
+       ;;or just get the next state
+       (assoc-in state
+                 [:emotions (state :cur-emotion)]
+                 (animation/next-frame (get-in state [:emotions (state :cur-emotion)]))))
+      state))
+   ;finally assoc in the cur-frame-no
+   (assoc :cur-frame-no (mod (+ 1 (state :cur-frame-no)) @settings/frame-rate))
+   (repl/keypress-handler)
+   ;;uncomment to clear repl for debugging
+   ;;(assoc :repl-text "")
+   ))
 
 (defn mat-to-p-image [mat]
   (let [w (.width mat)
@@ -142,11 +152,10 @@
 
 (defn activate-mat-display []
   (dosync (ref-set draw-mat? true)
-          (ref-set frame-rate 30)))
+          (ref-set @settings/frame-rate 30)))
 
 (defn deactivate-mat-display []
-  (dosync (ref-set draw-mat? false)
-          (ref-set frame-rate animation-frame-rate)))
+  (dosync (ref-set draw-mat? false)))
 
 (defn calculate-image-numbers []
   (let [w-ratio (/ @settings/width settings/face-image-width)
@@ -172,18 +181,16 @@
      (int (* 1024 zoom ratio))
      (int (* 600 zoom ratio))]))
 
+
 (defn draw [state]
   (q/background 0)
   (if @draw-mat?
       (draw-mat @smart-mat-to-draw))
   (apply q/image (animation/get-cur-frame (get-in state [:emotions (state :cur-emotion)]))  (calculate-image-numbers))
-  (if (>= 0.1
+  (if (<= 0.1
          (- (/ @settings/height settings/face-image-height)
             (/ @settings/width settings/face-image-width)))
-    (q/text ">>"
-            (- (first (calculate-image-numbers))
-               (/ (nth (calculate-image-numbers) 2) 2))
-            (- @settings/height 30)))
+    (repl/display state))
   (q/fill 255))
   
 ;(go (>! "Hello there"))

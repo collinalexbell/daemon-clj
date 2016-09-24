@@ -177,6 +177,13 @@
   (if @draw-mat?
       (draw-mat @smart-mat-to-draw))
   (apply q/image (animation/get-cur-frame (get-in state [:emotions (state :cur-emotion)]))  (calculate-image-numbers))
+  (if (>= 0.1
+         (- (/ @settings/height settings/face-image-height)
+            (/ @settings/width settings/face-image-width)))
+    (q/text ">>"
+            (- (first (calculate-image-numbers))
+               (/ (nth (calculate-image-numbers) 2) 2))
+            (- @settings/height 30)))
   (q/fill 255))
   
 ;(go (>! "Hello there"))
@@ -184,7 +191,7 @@
 (defn create []
  (q/defsketch dameon-face
    :size [@settings/width @settings/height]
-   :features [:resizeable :no-safe-fns]
+   :features [:resizeable :no-safe-fns :keep-on-top]
    :setup setup
    :update update-state
    :draw draw
@@ -220,7 +227,7 @@
   (swap! restore-width (constantly @settings/width))
   (swap! restore-height (constantly @settings/height))
   (let [dim (-> (Toolkit/getDefaultToolkit) (.getScreenSize))]
-    (resize sketch (.width dim) (.height dim))))
+    (resize sketch (.width dim) (- (.height dim) 50))))
 
 (defn restore [sketch]
   (resize sketch @restore-width @restore-height))

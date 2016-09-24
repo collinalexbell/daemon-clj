@@ -149,22 +149,26 @@
           (ref-set frame-rate animation-frame-rate)))
 
 (defn calculate-image-numbers []
-  (let [ratio
-        (max (/ @settings/width settings/face-image-width)
-             (/ @settings/height settings/face-image-height))
-
+  (let [w-ratio (/ @settings/width settings/face-image-width)
+        h-ratio (/ @settings/height settings/face-image-height)
+        ratio-dim (if (<= w-ratio  h-ratio) :w :h)
+        ratio (min w-ratio h-ratio)
         zoom
         ;;Crazy. I don't know how I should zoom, because of margins.
         ;;I think the function is linear. So I just pick two points
         ;;and choose 2 good looking zooms that look about the same
-        (if (< ratio 1)
-          (+ 1.1 (/ 0.015 ratio))
-          (/ 1.0 ratio))]
+        (case ratio-dim 
+          :w
+          (if (< ratio 0.55)
+            (+ 1.9 (/ 0.001 ratio))
+            (/ 1.0 ratio))
+          :h
+          (if (< ratio 1)
+            (+ 1.1 (/ 0.015 ratio))
+            (/ 1.0 ratio)))]
 
     [(int (/ @settings/width 2))
-     (int (if (< ratio 1)
-            (/ @settings/height 2)
-            (/ 600 2)))
+     (int (- (/ (* 600 ratio zoom) 2) (if (<= ratio 1) (* 38 ratio) (* 25)) ))
      (int (* 1024 zoom ratio))
      (int (* 600 zoom ratio))]))
 
@@ -220,6 +224,8 @@
 
 (defn restore [sketch]
   (resize sketch @restore-width @restore-height))
+
+(defn add-repl [])
 
 (create)
 

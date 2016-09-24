@@ -9,9 +9,7 @@
   ;;If the emotion exists
   (if-let [emotion-folder (str settings/face-animation-folder "/" (name emotion-key))]
     (map 
-     #(let [img (q/load-image (str emotion-folder "/" %))]
-        (q/resize img (int (/ 1024 2.8)) (int (/ 600 2.8)))
-        img)
+     #(q/load-image (str emotion-folder "/" %))
      ;;vector of image paths in emotion-folder
      (map #(.getName %) (.listFiles (clojure.java.io/file emotion-folder))))
     ;;if emotion doesn't exist 
@@ -38,9 +36,6 @@
   {:frames
     (load-sprite-files emotion-key)
    :cur-frame-no 0})
-
-
-
 
 
 

@@ -1,7 +1,9 @@
 (ns dameon.settings)
 
-(def width 200)
-(def height 200)
+(def width (ref 1024))
+(def height (ref 600))
+(def face-image-width 1024)
+(def face-image-height 600)
 (def voice-engine :watson)
 (def available-emotions
   [:happy :sad :determined :confused :exuberant])

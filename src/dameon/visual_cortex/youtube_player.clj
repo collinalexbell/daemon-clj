@@ -39,7 +39,8 @@
   (let [options
         {:query-params {:part "id" 
                         :key  (creds :key)
-                        :q     term-string}}]
+                        :q     term-string
+                        :type  "video"}}]
     (http/get "https://www.googleapis.com/youtube/v3/search" options)))
 
 (defn parse-response [response]

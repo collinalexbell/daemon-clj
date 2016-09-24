@@ -20,6 +20,8 @@
 
 (def wave-type javax.sound.sampled.AudioFileFormat$Type/WAVE)
 
+;;The function that will be dynamically generated to stop a recording session manually
+(def stop-listening (atom (fn [] nil)))
 
 
 (defn request-new-access-token []
@@ -67,11 +69,15 @@
     (clojure.java.io/copy (clojure.java.io/input-stream x) out)
     (.toByteArray out)))
 
-(defn stopper-thread [time line return-emot]
+(defn stopper-thread [time line]
   (Thread/sleep time)
-  (face/change-emotion return-emot)
   (.stop line)
   (.close line))
+
+(defn gen-stop-listening-fn [ignore line]
+  (fn []
+    (.stop line)
+    (.close line)))
 
 (defn record-audio
   [time]
@@ -82,10 +88,16 @@
       (throw (Exception. "Audio line is not supported"))
       (let [line (AudioSystem/getLine line-info)]
         (.open line audio-format)
-        (let [return-emot (face/get-cur-emotion)]
-          (face/change-emotion :listen)
-          (.start line)
-          (async/go (stopper-thread time line return-emot)))
+        (.start line)
+        (if (> time 0)
+          ;;Automatic, timed based recording stoppage
+          (async/go (stopper-thread time line))
+          ;;Manual, hotkey based recording stoppage
+          (do
+            ;;timer will be manually called or after a 15 second recording
+            (async/go (stopper-thread 15000 line))
+            ;;also, dynamically set the function called stop-listening
+            (swap! stop-listening gen-stop-listening-fn line)))
         (with-open [out (java.io.ByteArrayOutputStream.)]
          (AudioSystem/write
           (AudioInputStream. line)
@@ -94,6 +106,7 @@
     (slurp-bytes file-name)))
 
 (defn interpret-speech [sound-bytes]
+  (face/change-emotion :understand)
   (let [options 
         {:headers {"Authorization" (str "Bearer " (get-access-token))
                    "Content-type" "audio/wav; codec=\"audio/pcm\"; samplerate=16000"}
@@ -114,18 +127,15 @@
 
 (defn record-and-interpret-speech [time callback]
   (callback
-   (let [sound-bytes (record-audio time)
-         return-emot (face/get-cur-emotion)]
-     (face/change-emotion :understand)
-     (let
-         [rv 
-          {:event :words
-           :from  :api
-           :data  (get-words-from-api-result
-                   @(interpret-speech sound-bytes))}]
-       (face/change-emotion return-emot)
-       rv))))
-
+       (let [sound-bytes (record-audio time)
+             rv 
+              {:event :words
+               :from  :api
+               :data  (clojure.string/lower-case
+                       (get-words-from-api-result
+                        @(interpret-speech sound-bytes)))}]
+         (face/change-emotion @face/emot-buffer)
+         rv)))
 
 
 (defn readFile [file listener]

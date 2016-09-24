@@ -10,18 +10,22 @@
 
 (import '[org.opencv.core MatOfInt MatOfByte MatOfRect Mat CvType Size]
         '[org.opencv.imgcodecs Imgcodecs]
-        '[org.opencv.imgproc Imgproc])
+        '[org.opencv.imgproc Imgproc]
+        '[java.awt Toolkit])
 
 
 (import 'java.nio.ByteBuffer)
 (import 'java.nio.ByteOrder)
 
-(def old-drawn-smart-mat (ref (smart-atom/create (Mat. settings/width settings/height CvType/CV_8UC3))))
+(def restore-width (atom settings/width))
+(def restore-height (atom settings/height))
+(def emot-buffer (atom :happy))
+(def old-drawn-smart-mat (ref (smart-atom/create (Mat. @settings/width @settings/height CvType/CV_8UC3))))
 (def animation-frame-rate 2)
 (def transitioner (ref nil))
 (def frame-rate (ref 2))
 (def draw-mat? (ref false))
-(def smart-mat-to-draw (ref (smart-atom/create (Mat. settings/width settings/height CvType/CV_8UC3))))
+(def smart-mat-to-draw (ref (smart-atom/create (Mat. @settings/width @settings/height CvType/CV_8UC3))))
 (def in-main-loop? (ref false))
 (def cur-emotion (ref nil))
 
@@ -63,6 +67,7 @@
     available-emotion-keys)))
 
 (defn setup []
+  (q/image-mode :center)
   (q/frame-rate animation-frame-rate)
   (q/background 255)
   (let [animations (load-emotions)]
@@ -115,7 +120,7 @@
   (try
     (let [new-smart-mat-to-draw
          (if (= (.size (smart-atom/deref smart-mat))
-                (Size. settings/width settings/height))
+                (Size. @settings/width @settings/height))
            ;return a copy of the smart mat if no changes need to be made to the mat
            (smart-atom/copy smart-mat)
            ;;if changes do need to be made, the smart mat must be deep-cloned to get a brand new matrix
@@ -124,7 +129,7 @@
              (Imgproc/resize
                 (smart-atom/deref new-smart-mat)
                 (smart-atom/deref new-smart-mat)
-                (Size. settings/width settings/height))
+                (Size. @settings/width @settings/height))
              new-smart-mat))]
       ;;decrement the smart mat reference counter
       (smart-atom/delete smart-mat)
@@ -143,19 +148,39 @@
   (dosync (ref-set draw-mat? false)
           (ref-set frame-rate animation-frame-rate)))
 
+(defn calculate-image-numbers []
+  (let [ratio
+        (max (/ @settings/width settings/face-image-width)
+             (/ @settings/height settings/face-image-height))
+
+        zoom
+        ;;Crazy. I don't know how I should zoom, because of margins.
+        ;;I think the function is linear. So I just pick two points
+        ;;and choose 2 good looking zooms that look about the same
+        (if (< ratio 1)
+          (+ 1.1 (/ 0.015 ratio))
+          (/ 1.0 ratio))]
+
+    [(int (/ @settings/width 2))
+     (int (if (< ratio 1)
+            (/ @settings/height 2)
+            (/ 600 2)))
+     (int (* 1024 zoom ratio))
+     (int (* 600 zoom ratio))]))
 
 (defn draw [state]
   (q/background 0)
   (if @draw-mat?
       (draw-mat @smart-mat-to-draw))
-  (q/image (animation/get-cur-frame (get-in state [:emotions (state :cur-emotion)]))  -80 -5)
+  (apply q/image (animation/get-cur-frame (get-in state [:emotions (state :cur-emotion)]))  (calculate-image-numbers))
   (q/fill 255))
   
 ;(go (>! "Hello there"))
 
 (defn create []
  (q/defsketch dameon-face
-   :size [200 200]
+   :size [@settings/width @settings/height]
+   :features [:resizeable :no-safe-fns]
    :setup setup
    :update update-state
    :draw draw
@@ -176,3 +201,40 @@
 
 (defn get-cur-emotion []
   @cur-emotion)
+
+(defn set-emot-buffer [emot]
+  (swap! emot-buffer (constantly emot)))
+
+(defn resize [sketch width height]
+  (dosync
+   (ref-set settings/width width)
+   (ref-set settings/height height))
+   (.setSize (.frame sketch) width height))
+
+(defn maximize [sketch]
+  ;;Cache the old dims for "restore"
+  (swap! restore-width (constantly @settings/width))
+  (swap! restore-height (constantly @settings/height))
+  (let [dim (-> (Toolkit/getDefaultToolkit) (.getScreenSize))]
+    (resize sketch (.width dim) (.height dim))))
+
+(defn restore [sketch]
+  (resize sketch @restore-width @restore-height))
+
+(create)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

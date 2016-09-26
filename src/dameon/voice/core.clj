@@ -16,6 +16,7 @@
 (defn is-speaking []
   (case settings/voice-engine
     :watson (not @watson/finished)
+    :mac true
     :default true))
 
 (defn speak [words]

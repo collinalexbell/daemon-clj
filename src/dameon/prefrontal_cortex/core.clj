@@ -5,10 +5,12 @@
             [dameon.brochas-area.core :as brochas-area]
             [dameon.visual-cortex.youtube-player :as youtube-player]
             [dameon.temporal-lobe.calendar :as cal]
-            [dameon.eyes.core :as eyes]))
+            [dameon.eyes.core :as eyes]
+            [clojure.core.async :as async]))
 
-
-
+(def temporal-state (atom {}))
+(def input-memory (atom []))
+(def auditory-state (atom {}))
 (def face-buffer (atom nil))
 (def possible-actions (atom {}))
 (defn clear-possible-actions []
@@ -22,7 +24,7 @@
 ;;Sometimes there are 2 mutually exclusive actions that should be taken at once
 (defn do-best-action [cur-state goal]
   (try
-    ((first (get @possible-actions goal)) cur-state)
+    ((last (get @possible-actions goal)) cur-state)
     (catch Exception e)))
 
 
@@ -34,15 +36,16 @@
   (case (get the-input :event)
     :words
     (case (get the-input :from)
-      :text (do-best-action the-input :act-on-speech)
+      :text (do-best-action (assoc the-input :last-input (peek @input-memory)) :act-on-speech)
       :sphinx (do-best-action the-input :listen-intently)
       :api    (do (println the-input) (do-best-action the-input :act-on-speech)))
     :face-detection
     (do-best-action the-input :face-detection)
     :combo-pressed
-    (do-best-action the-input :listen-intently)
+    (do-best-action (merge the-input @auditory-state) :listen-intently)
     :combo-released
-    (do-best-action the-input :stop-listening)))
+    (do-best-action the-input :stop-listening))
+  (swap! input-memory conj the-input))
 
 ;;Sphinx is shit. It doesn't work. Sorry.
 ;(brochas-area/launch-sphinx input)
@@ -58,7 +61,8 @@
    (fn [cur-state]
      (face/set-emot-buffer (face/get-cur-emotion))
      (face/change-emotion :listen)
-     (voice/speak "I am listening")
+     (if (not (cur-state :anticipate-vocal-input))
+      (voice/speak "I am listening"))
      (if (= (cur-state :event) :combo-pressed)
        ;;-1 activates manual stoppage
        (brochas-area/record-and-interpret-speech -1 input)
@@ -71,6 +75,7 @@
    :act-on-speech
    (fn [cur-state]
      (println "acting on speech")
+     (if (and (cur-state :anticipate-vocal-input) (cur-state :last-input)))
      (if (> (.indexOf (:data cur-state) "calendar") -1)
        (do-best-action nil :tell-me-todays-events))
      (if (> (.indexOf (:data cur-state) "maximize") -1)
@@ -109,7 +114,11 @@
   (visual-cortex/stop-display-basic-vision)
   (add-face-watcher))
 
-
+(defn anticipate-vocal-input [time]
+  (swap! auditory-state assoc :anticipate-vocal-input true)
+  ;;Stop the anticipation after time
+  (async/go (do (Thread/sleep time)
+                (swap! auditory-state assoc :anticipate-vocal-input false))))
 ;(init)
 
 

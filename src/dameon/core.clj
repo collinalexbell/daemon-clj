@@ -18,6 +18,7 @@
 (def user "Collin")
 
 (defn init []
+  (prefrontal-cortex/add-default-actions)
   (eyes/see visual-cortex/tree)
   (keyboard-listener/start prefrontal-cortex/input))
 

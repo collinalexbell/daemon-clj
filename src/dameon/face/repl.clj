@@ -48,7 +48,19 @@
            (> (count t) 0))
     (assoc state
            :repl-output
-           (str (eval (read-string (str "(" (state :repl-text) ")"))))
+           (try
+             (str (binding [*ns* (find-ns 'dameon.face.core)]
+                   (eval (read-string (str "(" (state :repl-text) ")")))))
+             (catch Exception e
+               (str e)
+               (try
+                 (str (binding [*ns* (find-ns 'dameon.face.core)]
+                       (eval (read-string (str
+                                           "(do (in-ns 'dameon-face.core) "
+                                           (state :repl-text)
+                                           ")")))))
+                 (catch Exception e
+                   "error"))))
 
            :repl-text
            "")

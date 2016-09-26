@@ -1,13 +1,15 @@
 (ns dameon.voice.watson-speak
   (:require [clojure.edn :as edn :only [read-string]]
             [org.httpkit.client :as http]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.core.async :as async])
   (:import [com.ibm.watson.developer_cloud.text_to_speech.v1 TextToSpeech]
            [com.ibm.watson.developer_cloud.text_to_speech.v1.util WaveUtils]
            [javax.sound.sampled AudioSystem AudioFormat]
            [java.io BufferedInputStream InputStream]))
 
 (def creds (get (edn/read-string (slurp "config/creds.edn")) :ibm-creds))
+(def finished (atom true))
 
 (defn get-synthesis [text]
   (let [options
@@ -19,18 +21,24 @@
 
 
 
-(defn play-wav [stream]
+(defn open-wav [stream]
   (let [clip (AudioSystem/getClip)]
       (.open clip (AudioSystem/getAudioInputStream stream))
-      (.start clip)))
+      clip))
 
+(defn play-wav [clip]
+  (.start clip)
+  (Thread/sleep 50)
+  (while (.isRunning clip) :pass)
+  (swap! finished (constantly true)))
 
 (defn speak [text]
-  (play-wav (get-synthesis text)))
+    (let [audio-clip
+          (open-wav (get-synthesis text))]
+      (swap! finished (constantly false))
+      (async/go (play-wav audio-clip))))
 
-
-
-
+@finished
 
 
 

@@ -13,6 +13,11 @@
   (sh "say" "-vVicki" words)
   :done)
 
+(defn is-speaking []
+  (case settings/voice-engine
+    :watson (not @watson/finished)
+    :default true))
+
 (defn speak [words]
   (case settings/voice-engine
     :watson    (watson/speak words)

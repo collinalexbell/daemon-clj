@@ -16,6 +16,8 @@
         '[org.opencv.objdetect CascadeClassifier])
 
 
+(def saw-face-last-frame (atom false))
+(def conseq-face-count (atom 0))
 (def tree (atom (stree/create)))
 (def detect-face (atom nil))
 (def recognize-emotion (atom nil))
@@ -43,18 +45,21 @@
           (stream/->FaceDetectionStream
            []
            [#(try
-               (spit "display-basic-vision.log" (str % "\n") :append true)
+               (spit "display-basic-vision.log" (str % "\n"))
                (smart-atom/delete (% :smart-mat))
                (if (and
                     (not (nil? @detect-face))
                     (> (count (% :faces)) 0))
                  (do
+                   (swap! conseq-face-count (fn [count] (+ count 1)))
                    (input-fn {:event :face-detection
-                              :data  (% :faces)})
-                   (swap! detect-face (constantly nil))))
+                              :data  {:faces (% :faces) :conseq-face-frames @conseq-face-count}})
+
+                   )
+                 (do (swap! conseq-face-count (constantly 0))))
                (catch Exception e (spit "exceptions.log" (str (.getMessage e) "\n" :append true))))]
            :face-stream)
-          (stream/set-fps 1))))
+          (stream/set-fps 0.5))))
 
 (def emotion-recognition-to-ai-emotion-map
   {:anger :angry

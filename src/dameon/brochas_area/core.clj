@@ -98,11 +98,13 @@
             (async/go (stopper-thread 15000 line))
             ;;also, dynamically set the function called stop-listening
             (swap! stop-listening gen-stop-listening-fn line)))
+        (println "writing audio")
         (with-open [out (java.io.ByteArrayOutputStream.)]
          (AudioSystem/write
           (AudioInputStream. line)
           wave-type
           (java.io.File. file-name)))))
+    (println "reading audio")
     (slurp-bytes file-name)))
 
 (defn interpret-speech [sound-bytes]

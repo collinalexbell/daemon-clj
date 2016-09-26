@@ -11,6 +11,8 @@
 
 (def face-buffer (atom nil))
 (def possible-actions (atom {}))
+(defn clear-possible-actions []
+  (def possible-actions (atom {})))
 
 (defn add-possible-actions [goal action]
   (swap! possible-actions (fn [a] (assoc a goal (conj (get a goal) action)))))
@@ -97,14 +99,19 @@
   (add-possible-actions
    :face-detection
    (fn [cur-state]
-     (voice/speak "I see you"))))
+     (println cur-state)
+     (if (> (get-in cur-state [:data :conseq-face-frames]) 0)
+       (do (swap! visual-cortex/detect-face (constantly nil)) 
+          (do-best-action cur-state :greet))))))
 
-(add-default-actions)
-(add-stop-listening)
+(defn reset-face-detect []
+  (def possible-actions (atom {}))
+  (visual-cortex/stop-display-basic-vision)
+  (add-face-watcher))
+
 
 ;(init)
 
-;(add-face-watcher)
 
 
 

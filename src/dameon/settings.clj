@@ -1,11 +1,11 @@
 (ns dameon.settings)
 
-(def width (ref 1024))
-(def height (ref 600))
+(def width (ref 200))
+(def height (ref 300))
 (def face-image-width 1024)
 (def face-image-height 600)
 (def voice-engine :mac)
-(def frame-rate (ref 120))
+(def frame-rate (ref 20))
 (def animation-frame-rate 2)
 (def available-emotions
   [:happy :sad :determined :confused :exuberant])

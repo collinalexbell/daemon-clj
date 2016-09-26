@@ -20,7 +20,8 @@
                  [org.twitter4j/twitter4j-stream "[4.0,)"]
                  [com.1stleg/jnativehook "2.0.2"]]
   :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"}
-  :plugins [[lein-ns-dep-graph "0.1.0-SNAPSHOT"]])
+  :plugins [[lein-ns-dep-graph "0.1.0-SNAPSHOT"]]
+  :jvm-opts ^:replace [])
 
 
 

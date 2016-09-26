@@ -15,31 +15,30 @@
 
 (import '[java.util.Timer])
 
+(def user "Collin")
+
 (defn init []
   (eyes/see visual-cortex/tree)
-  (brochas-area/launch-sphinx-dameon)
   (keyboard-listener/start prefrontal-cortex/input))
 
 (init)
 
-(defn greet-person-if-seen []
-  (async/go
-    (loop [time-since-last-saw-person (. System currentTimeMillis)] ;in seconds 
-      (Thread/sleep 1000)
-      (println time-since-last-saw-person)
-      (let [sees-person (visual-cortex/sees-person?)
-            elapsed-time-since-last-saw-person (/ (- (. System currentTimeMillis) time-since-last-saw-person) 1000)]
-        (if (and (> elapsed-time-since-last-saw-person 20) sees-person)
-          (voice/speak "Hello There"))
-        (recur (if sees-person (. System currentTimeMillis) time-since-last-saw-person))))))
-
-(def greet-process (greet-person-if-seen))
 
 (defn greet [name]
-  (face/change-emotion :confused :block true)
-  (voice/speak (str "Hello " name ))
-  (voice/speak (str "How are you?"))
-  (face/change-emotion :exuberant))
+  (face/change-emotion :urgent)
+  (voice/speak (str "Good evening " name ", how are you doing?"))
+  (while (voice/is-speaking) :default)
+  (face/change-emotion :happy))
+
+(defn start-greeter []
+  (prefrontal-cortex/clear-possible-actions)
+  (visual-cortex/stop-display-basic-vision)
+  (prefrontal-cortex/add-possible-actions
+   :greet
+   (fn [cur-state] (greet user)))
+  (prefrontal-cortex/add-face-watcher))
+
+
 
 
 (def alarm-not-fired? (atom true))

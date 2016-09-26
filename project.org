@@ -221,6 +221,10 @@ API so that users can create their own applications
 		 CLOSED: [2016-09-14 Wed 20:14]
 
 **** TODO Load the gifs into frames
+*** Sept 25, 2016
+**** Write a function to detect when the dameon stops speaking
+**** I am writing a simple greet function
+**** Get the dameon to greet me and expect a response if it sees me.
 ** Hardware
 *** RPi3
 *** Mic

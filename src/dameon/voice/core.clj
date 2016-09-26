@@ -1,7 +1,6 @@
 (ns dameon.voice.core
   (require [dameon.settings :as settings]
-           ;;[dameon.voice.watson-speak :as watson]
-           )
+           [dameon.voice.watson-speak :as watson])
   (use [clojure.java.shell :only [sh]]))
 
 
@@ -16,12 +15,12 @@
 
 (defn is-speaking []
   (case settings/voice-engine
-    ;;:watson (not @watson/finished)
+    :watson (not @watson/finished)
     :default true))
 
 (defn speak [words]
   (case settings/voice-engine
-  ;;  :watson    (watson/speak words)
+    :watson    (watson/speak words)
     :cerevoice (cerevoice-speak words)
     :mac       (mac-speak words)
   (throw (Exception. "No voice engine enabled"))))

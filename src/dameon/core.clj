@@ -19,6 +19,7 @@
 
 (defn init []
   (prefrontal-cortex/add-default-actions)
+  (prefrontal-cortex/add-stop-listening)
   (eyes/see visual-cortex/tree)
   (keyboard-listener/start prefrontal-cortex/input))
 

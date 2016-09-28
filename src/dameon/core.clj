@@ -11,27 +11,19 @@
            [dameon.eyes.core :as eyes]
            [clojure.core.async :as async]
            [dameon.smart-atom :as smart-atom]
-           [dameon.keyboard-listener :as keyboard-listener]))
+           [dameon.keyboard-listener :as keyboard-listener]
+           [dameon.prefrontal-cortex.actions :as actions]))
 
 (import '[java.util.Timer])
 
 (def user "Collin")
 
 (defn init []
-  (prefrontal-cortex/add-default-actions)
-  (prefrontal-cortex/add-stop-listening)
+  (actions/add-all)
   (eyes/see visual-cortex/tree)
   (keyboard-listener/start prefrontal-cortex/input))
 
 (init)
-
-
-(defn greet [name]
-  (face/change-emotion :urgent)
-  (voice/speak (str "Good evening " name ", how are you doing?"))
-  (while (voice/is-speaking) :default)
-  (face/change-emotion :happy)
-  (prefrontal-cortex/anticipate-vocal-input 10000))
 
 
 (defn start-greeter []

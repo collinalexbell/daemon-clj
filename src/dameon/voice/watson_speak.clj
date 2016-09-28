@@ -37,7 +37,7 @@
         rv               (ByteArrayInputStream. (.toByteArray out-stream))]
     (async/go (write-byte-array-output-stream-to-file out-stream cache-file-name)
               (swap! cache-index assoc phrase cache-uuid)
-              (spit "resources/watson_voice_cache.edn" cache-index))
+              (spit "resources/watson_voice_cache.edn" @cache-index))
     rv))
 
 

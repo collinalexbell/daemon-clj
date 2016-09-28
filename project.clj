@@ -18,7 +18,8 @@
                  [com.ibm.watson.developer_cloud/java-sdk "3.3.1"]
                  [org.twitter4j/twitter4j-core "[4.0,)"]
                  [org.twitter4j/twitter4j-stream "[4.0,)"]
-                 [com.1stleg/jnativehook "2.0.2"]]
+                 [com.1stleg/jnativehook "2.0.2"]
+                 [org.apache.commons/commons-io "1.3.2"]]
   :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"}
   :plugins [[lein-ns-dep-graph "0.1.0-SNAPSHOT"]]
   :jvm-opts ^:replace [])

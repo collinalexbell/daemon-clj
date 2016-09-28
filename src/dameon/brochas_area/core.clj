@@ -19,6 +19,7 @@
           AudioInputStream])
 
 (def wave-type javax.sound.sampled.AudioFileFormat$Type/WAVE)
+(def state (atom {}))
 
 ;;The function that will be dynamically generated to stop a recording session manually
 (def stop-listening (atom (fn [] nil)))
@@ -172,6 +173,12 @@
   (launch-sphinx-dameon)
   (launch-sphinx-listener callback))
 
+
+(defn anticipate-vocal-input [time]
+  (swap! state assoc :anticipate-vocal-input true)
+  ;;Stop the anticipation after time
+  (async/go (do (Thread/sleep time)
+                (swap! state assoc :anticipate-vocal-input false))))
 
 
 

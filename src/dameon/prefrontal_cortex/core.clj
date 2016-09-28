@@ -60,19 +60,6 @@
   (eyes/see visual-cortex/tree))
 
 
-(defn anticipate-vocal-input [time]
-  (swap! auditory-state assoc :anticipate-vocal-input true)
-  ;;Stop the anticipation after time
-  (async/go (do (Thread/sleep time)
-                (swap! auditory-state assoc :anticipate-vocal-input false))))
-
-
-
-
-
-
-
-
 
 
 

@@ -12,7 +12,8 @@
            [clojure.core.async :as async]
            [dameon.smart-atom :as smart-atom]
            [dameon.keyboard-listener :as keyboard-listener]
-           [dameon.prefrontal-cortex.actions :as actions]))
+           [dameon.prefrontal-cortex.actions :as actions]
+           [dameon.temporal-lobe.core :as temporal-lobe]))
 
 (import '[java.util.Timer])
 

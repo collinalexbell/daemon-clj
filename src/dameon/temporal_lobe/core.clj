@@ -1,4 +1,4 @@
-(ns temporal-lobe.core
+(ns dameon.temporal-lobe.core
   (:require
    [dameon.face.core :as face]
    [dameon.voice.core :as voice]

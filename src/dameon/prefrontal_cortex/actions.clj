@@ -16,7 +16,7 @@
     (fn [cur-state]
       (face/set-emot-buffer (face/get-cur-emotion))
       (face/change-emotion :listen)
-      (if (not (cur-state :anticipate-vocal-input))
+      (if (not (@brochas-area/state :anticipate-vocal-input))
         (voice/speak "I am listening"))
       (if (= (cur-state :event) :combo-pressed)
         ;;-1 activates manual stoppage

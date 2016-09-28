@@ -28,14 +28,11 @@
 
 
 (defn start-greeter []
-  (prefrontal-cortex/clear-possible-actions)
-  (prefrontal-cortex/add-default-actions)
-  (prefrontal-cortex/add-stop-listening)
-  (visual-cortex/stop-display-basic-vision)
+  (prefrontal-cortex/remove-possible-action :greet)
   (prefrontal-cortex/add-possible-actions
    :greet
-   (fn [cur-state] (greet user)))
-  (prefrontal-cortex/add-face-watcher))
+   (fn [cur-state] (temporal-lobe/greet user)))
+  (visual-cortex/start-face-detect prefrontal-cortex/input))
 
 
 

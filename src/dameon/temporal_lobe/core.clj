@@ -10,7 +10,7 @@
     (voice/speak (str "Good evening " name ", how are you doing?"))
     (while (voice/is-speaking) :default)
     (face/change-emotion :happy)
-    (brochas-area/anticipate-vocal-input 10000))
+    (brochas-area/anticipate-vocal-input 5000))
   
 
 

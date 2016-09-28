@@ -36,7 +36,8 @@
         out-stream       (instream-to-outstream stream)
         rv               (ByteArrayInputStream. (.toByteArray out-stream))]
     (async/go (write-byte-array-output-stream-to-file out-stream cache-file-name)
-              (swap! cache-index assoc phrase cache-uuid))
+              (swap! cache-index assoc phrase cache-uuid)
+              (spit "resources/watson_voice_cache.edn" cache-index))
     rv))
 
 
@@ -46,7 +47,7 @@
          :query-params {:voice "en-US_AllisonVoice"
                         :accept "audio/wav"
                         :text text}}]
-    (cache text (WaveUtils/reWriteWaveHeader (@(http/get (str (creds :url) "/v1/synthesize") options) :body)))))
+    (WaveUtils/reWriteWaveHeader (@(http/get (str (creds :url) "/v1/synthesize") options) :body))))
 
 
 
@@ -66,7 +67,9 @@
 (defn should-be-cached?
   "Should the phrase be cached now?"
   [phrase]
-  (contains? @should-be-cached-next-speak phrase))
+  (and
+   (contains? @should-be-cached-next-speak phrase)
+   (not (is-cached? phrase))))
 
 (defn load-cache [phrase])
 
@@ -81,20 +84,32 @@
   (while (.isRunning clip) :pass)
   (swap! finished (constantly true)))
 
-(defn play-cached-wav [file-name]
+(defn open-cached-wav [file-name]
   ;;First open file and convert to input stream
-  (play-wav
    (open-wav
     (ByteArrayInputStream.
-     (org.apache.commons.io.IOUtils/toByteArray (FileInputStream. file-name))))))
+     (org.apache.commons.io.IOUtils/toByteArray (FileInputStream. file-name)))))
 
 (defn speak [text]
     (let [audio-clip
-          (open-wav (get-synthesis text))]
+          (if (is-cached? text)
+            (open-cached-wav (str "resources/watson_voice_cache/" (@cache-index text) ".wav"))
+            (do
+              (let [synthesis
+                    (if (should-be-cached? text)
+                      (cache text (get-synthesis text))
+                      (get-synthesis text))]
+
+                (!add-to-should-be-cached-next-speak text)
+                (open-wav synthesis))))]
       (swap! finished (constantly false))
       (async/go (play-wav audio-clip))))
 
 @finished
+
+
+
+
 
 
 

@@ -31,11 +31,13 @@
   (voice/speak (str "Good evening " name ", how are you doing?"))
   (while (voice/is-speaking) :default)
   (face/change-emotion :happy)
-  (prefrontal-cortex/anticipate-input 10000))
+  (prefrontal-cortex/anticipate-vocal-input 10000))
 
 
 (defn start-greeter []
   (prefrontal-cortex/clear-possible-actions)
+  (prefrontal-cortex/add-default-actions)
+  (prefrontal-cortex/add-stop-listening)
   (visual-cortex/stop-display-basic-vision)
   (prefrontal-cortex/add-possible-actions
    :greet

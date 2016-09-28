@@ -9,6 +9,7 @@
             [clojure.core.async :as async]))
 
 (def temporal-state (atom {}))
+(def action-memory (atom []))
 (def input-memory (atom []))
 (def auditory-state (atom {}))
 (def face-buffer (atom nil))
@@ -23,6 +24,7 @@
 ;;This is limiting. Sometimes there isn't a best actions
 ;;Sometimes there are 2 mutually exclusive actions that should be taken at once
 (defn do-best-action [cur-state goal]
+  (swap! action-memory conj goal)
   (try
     ((last (get @possible-actions goal)) cur-state)
     (catch Exception e)))
@@ -36,7 +38,7 @@
   (case (get the-input :event)
     :words
     (case (get the-input :from)
-      :text (do-best-action (assoc the-input :last-input (peek @input-memory)) :act-on-speech)
+      :text (do-best-action (assoc the-input :last-action (peek @action-memory)) :act-on-speech)
       :sphinx (do-best-action the-input :listen-intently)
       :api    (do (println the-input) (do-best-action the-input :act-on-speech)))
     :face-detection
@@ -75,7 +77,7 @@
    :act-on-speech
    (fn [cur-state]
      (println "acting on speech")
-     (if (and (cur-state :anticipate-vocal-input) (cur-state :last-input)))
+     (if (and (cur-state :anticipate-vocal-input) ((cur-state :last-input))))
      (if (> (.indexOf (:data cur-state) "calendar") -1)
        (do-best-action nil :tell-me-todays-events))
      (if (> (.indexOf (:data cur-state) "maximize") -1)

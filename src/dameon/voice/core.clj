@@ -16,7 +16,8 @@
 (defn is-speaking []
   (case settings/voice-engine
     :watson (not @watson/finished)
-    :mac true
+    ;;Always false for mac since the api call will not return until speaking stops
+    :mac false
     :default true))
 
 (defn speak [words]

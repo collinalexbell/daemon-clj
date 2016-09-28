@@ -4,7 +4,7 @@
 (def height (ref 300))
 (def face-image-width 1024)
 (def face-image-height 600)
-(def voice-engine :mac)
+(def voice-engine :watson)
 (def frame-rate (ref 20))
 (def animation-frame-rate 2)
 (def available-emotions

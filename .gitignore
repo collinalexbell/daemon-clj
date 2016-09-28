@@ -14,3 +14,4 @@ cerevoice/
 *#
 *.log
 creds.edn
+/resources/watson_voice_cache/*

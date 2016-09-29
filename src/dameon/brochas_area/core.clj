@@ -48,7 +48,18 @@
 (defn set-new-access-token []
   (swap! access-token
          (fn [ignore]
-       (> (System/currentTimeMillis) (get @access-token :expiration-time))
+           (parse-access-token-response-body
+            (get @(request-new-access-token) :body)))))
+
+;;Get the initial access token
+(async/go (set-new-access-token) (swap! initialized (constantly true)))
+
+(defn get-access-token
+  "Returns the access token string"
+  []
+  (if (nil? access-token)
+    (set-new-access-token))
+  (if (> (System/currentTimeMillis) (get @access-token :expiration-time))
     (set-new-access-token))
   (get @access-token :access-token))
 
@@ -162,12 +173,6 @@
   (launch-sphinx-dameon)
   (launch-sphinx-listener callback))
 
-
-(defn anticipate-vocal-input [time]
-  (swap! state assoc :anticipate-vocal-input true)
-  ;;Stop the anticipation after time
-  (async/go (do (Thread/sleep time)
-                (swap! state assoc :anticipate-vocal-input false))))
 
 
 

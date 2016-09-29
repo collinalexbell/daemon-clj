@@ -6,9 +6,9 @@
    [dameon.prefrontal-cortex.core :as pfc]
    [dameon.visual-cortex.youtube-player :as youtube-player]
    [dameon.temporal-lobe.calendar :as cal]
-   [dameon.visual-cortex.core :as visual-cortex]))
-
-
+   [dameon.visual-cortex.core :as visual-cortex]
+   [dameon.temporal-lobe.core :as temporal-lobe]
+   [dameon.temporal-lobe.twitter :as twitter]))
 
 
 (def action-map
@@ -16,7 +16,7 @@
     (fn [cur-state]
       (face/set-emot-buffer (face/get-cur-emotion))
       (face/change-emotion :listen)
-      (if (not (@brochas-area/state :anticipate-vocal-input))
+      (if (not (@temporal-lobe/state :anticipate-vocal-input))
         (voice/speak "I am listening"))
       (if (= (cur-state :event) :combo-pressed)
         ;;-1 activates manual stoppage
@@ -26,20 +26,28 @@
     :act-on-speech
     (fn [cur-state]
       (println "acting on speech")
-      (if (> (.indexOf (:data cur-state) "calendar") -1)
-        (pfc/do-best-action nil :tell-me-todays-events))
-      (if (> (.indexOf (:data cur-state) "change emotion"))
-        (if (> (.indexOf (:data cur-state) "happy") -1)
-          (face/change-emotion :happy)))
-      (if (> (.indexOf (:data cur-state) "maximize") -1)
-        (face/maximize face/dameon-face))
-      (if (> (.indexOf (:data cur-state) "restore") -1)
-        (face/restore face/dameon-face))
-      (if (> (.indexOf (:data cur-state) "play") -1)
-        (if (> (.indexOf (:data cur-state) "stop pla") -1)
-          (youtube-player/stop-player)
-          (youtube-player/play-most-popular-by-search-term
-           (clojure.string/replace (:data cur-state) #"play" "")))))
+      (let [cur-conversation (@temporal-lobe/state :cur-conversation)]
+        (temporal-lobe/clear-cur-conversation)
+       (if (= cur-conversation :status)
+         (temporal-lobe/update-user-status (cur-state :data)))
+       (if (and (= cur-conversation :tweet?) (> (.indexOf (:data cur-state) "yes") -1))
+         (twitter/tweet (@temporal-lobe/state :user-status))
+         (voice/speak "I sent the tweet"))
+       (if (> (.indexOf (:data cur-state) "calendar") -1)
+         (pfc/do-best-action nil :tell-me-todays-events))
+       (if (> (.indexOf (:data cur-state) "change emotion"))
+         (if (> (.indexOf (:data cur-state) "happy") -1)
+           (face/change-emotion :happy)))
+       (if (> (.indexOf (:data cur-state) "maximize") -1)
+         (face/maximize face/dameon-face))
+       (if (> (.indexOf (:data cur-state) "restore") -1)
+         (face/restore face/dameon-face))
+       (if (> (.indexOf (:data cur-state) "play") -1)
+         (if (> (.indexOf (:data cur-state) "stop pla") -1)
+           (youtube-player/stop-player)
+           (youtube-player/play-most-popular-by-search-term
+            (clojure.string/replace (:data cur-state) #"play" ""))))
+       ))
 
     :tell-me-todays-events
     (fn [cur-state]
@@ -53,10 +61,37 @@
     (fn [cur-state]
       (if (> (get-in cur-state [:data :conseq-face-frames]) 0)
         (do (swap! visual-cortex/detect-face (constantly nil)) 
-            (pfc/do-best-action cur-state :greet))))})
+            (pfc/do-best-action cur-state :greet))))
+
+   :update-user-status
+   temporal-lobe/update-user-status
+   })
 
 (defn add-all []
   (doall
    (map
     #(apply pfc/add-possible-actions %)
     action-map)))
+
+
+(defn reload-action [action]
+  (pfc/remove-possible-action action)
+  (pfc/add-possible-actions action (action-map action)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -11,6 +11,7 @@
                  [org.clojure/core.async "0.2.385"]
                  [opencv/opencv "3.1.0"] ; added line
                  [opencv/opencv-native "3.1.0"]
+                 [opencv/opencv-imgshow "1.0.1"]
                  [clj-time "0.12.0"]
                  [google-apps-clj "0.5.2"]
                  [org.clojure/data.json "0.2.6"]
@@ -19,7 +20,8 @@
                  [org.twitter4j/twitter4j-core "[4.0,)"]
                  [org.twitter4j/twitter4j-stream "[4.0,)"]
                  [com.1stleg/jnativehook "2.0.2"]
-                 [org.apache.commons/commons-io "1.3.2"]]
+                 [org.apache.commons/commons-io "1.3.2"]
+                 [incanter "1.5.7"]]
   :repositories {"sonatype-oss-public" "https://oss.sonatype.org/content/groups/public/"}
   :plugins [[lein-ns-dep-graph "0.1.0-SNAPSHOT"]]
   :jvm-opts ^:replace [])

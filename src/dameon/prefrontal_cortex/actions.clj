@@ -31,8 +31,8 @@
        (if (= cur-conversation :status)
          (temporal-lobe/update-user-status (cur-state :data)))
        (if (and (= cur-conversation :tweet?) (> (.indexOf (:data cur-state) "yes") -1))
-         (twitter/tweet (@temporal-lobe/state :user-status))
-         (voice/speak "I sent the tweet"))
+         (do (twitter/tweet (@temporal-lobe/state :user-status))
+             (voice/speak "I sent the tweet. Is there anything else I can do for you?")))
        (if (> (.indexOf (:data cur-state) "calendar") -1)
          (pfc/do-best-action nil :tell-me-todays-events))
        (if (> (.indexOf (:data cur-state) "change emotion"))
@@ -59,7 +59,7 @@
 
     :face-detection
     (fn [cur-state]
-      (if (> (get-in cur-state [:data :conseq-face-frames]) 0)
+      (if (> (get-in cur-state [:data :conseq-face-frames]) 1)
         (do (swap! visual-cortex/detect-face (constantly nil)) 
             (pfc/do-best-action cur-state :greet))))
 

@@ -1,6 +1,7 @@
 (ns dameon.visual-cortex.stream
   (require [dameon.smart-atom :as smart-atom]
            [dameon.visual-cortex.face-recognition :as face]
+           [dameon.visual-cortex.pushup-counter :as pushup-counter]
            [dameon.voice.core :as voice]
            [clojure.spec :as s]
            [clojure.core.async :refer [go]]))
@@ -77,6 +78,12 @@
               (Imgproc/rectangle new-mat (.tl face) (.br face) (Scalar. 0.0) 5)
               {:smart-mat (smart-atom/create new-mat) :faces faces}))
         {:smart-mat smart-mat :faces faces}))))
+
+
+(defrecord PushupDetectionStream [up-streams termini name]
+  Stream
+  (gen-new-data [this smart-mat]
+          (pushup-counter/get-motion smart-mat)))
 
 
 

@@ -21,11 +21,9 @@
 
 (defn init []
   (actions/add-all)
-  (eyes/see visual-cortex/tree)
   (keyboard-listener/start prefrontal-cortex/input))
 
 (init)
-
 
 (defn start-greeter []
   (prefrontal-cortex/remove-possible-action :greet)
@@ -34,34 +32,20 @@
    (fn [cur-state] (temporal-lobe/greet user)))
   (visual-cortex/start-face-detect prefrontal-cortex/input))
 
-
-
-
-(def alarm-not-fired? (atom true))
-
-(defn fire-alarm? [time]
-  (if (and (> (. System currentTimeMillis) time) @alarm-not-fired?)
-    true
-    false))
-
-(def my-pool (at-at/mk-pool))
-
-(defn set-alarm [time]
-   (at-at/at (c/to-long (apply t/date-time time))  
-             #(do (voice/speak "Hello. It is time to wake up!")
-                  (. Thread sleep 3000)
-                  (voice/speak "Hello. It is time to wake up!")
-                  (. Thread sleep 3000)
-                  (voice/speak "Hello. It is time to wake up!")
-                  (swap! alarm-not-fired? (fn [x] (identity false))))
-             my-pool))
-
-
-
-
-
-
-
+(defn show-emotions []
+  (face/change-emotion :sad)
+  (Thread/sleep 1500)
+  (face/change-emotion :angry)
+  (Thread/sleep 2000)
+  (face/change-emotion :nervous)
+  (Thread/sleep 2000)
+  (face/change-emotion :urgent)
+  (Thread/sleep 1500)
+  (face/change-emotion :understand)
+  (Thread/sleep 1500)
+  (face/change-emotion :listen)
+  (Thread/sleep 1500)
+  (face/change-emotion :happy))
 
 
 

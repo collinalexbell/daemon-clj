@@ -1,5 +1,5 @@
 (ns dameon.temporal-lobe.twitter
-  (:import [twitter4j TwitterStreamFactory StatusListener StreamListener Status UserStreamListener]
+  (:import [twitter4j TwitterStreamFactory StatusListener StreamListener Status UserStreamListener TwitterFactory StatusUpdate]
            [twitter4j.conf ConfigurationBuilder])
   (:require [clojure.edn :as edn :only [read-string]]))
 
@@ -24,22 +24,30 @@
                      :text (.getText msg)})))))
 
 
-@current-listener-code
-
 ;;Connect to the stream and add listener
-(def creds (get (edn/read-string (slurp "creds.edn")) :twitter))
-(def t-stream
+(def creds (get (edn/read-string (slurp "config/creds.edn")) :twitter))
+(def config 
   (-> (ConfigurationBuilder.)
      (.setDebugEnabled true)
      (.setOAuthConsumerKey (creds :consumer-key))
      (.setOAuthConsumerSecret (creds :consumer-secret))
      (.setOAuthAccessToken  (creds :access-token))
      (.setOAuthAccessTokenSecret (creds :access-secret))
-     (.build)
-     (TwitterStreamFactory.)
-     (.getInstance)))
-(.addListener t-stream user-listener)
-(.user t-stream)
+     (.build)))
+
+(def t-stream
+  (-> config
+   (TwitterStreamFactory.)
+   (.getInstance)))
+
+(def t
+  (-> config
+      (TwitterFactory.)
+      (.getInstance)))
+
+(defn tweet [the-tweet]
+  (.updateStatus t (StatusUpdate. the-tweet)))
+
 
 
 (defn kill []

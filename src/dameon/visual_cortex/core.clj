@@ -1,13 +1,18 @@
 (ns dameon.visual-cortex.core
   (require [dameon.eyes.core :as eyes]
-           [dameon.face.core :as face]
+           ;;[dameon.face.core :as face]
            [dameon.visual-cortex.stream :as stream]
            [dameon.visual-cortex.stream-tree :as stree]
            [dameon.visual-cortex.emotion-recognition :as emotion-recognition]
-           [dameon.visual-cortex.youtube-player :as youtube]
+           ;;[dameon.visual-cortex.youtube-player :as youtube]
+           ;;[dameon.visual-cortex.visualizer :as visualizer]
            [dameon.smart-atom :as smart-atom]
            [dameon.voice.core :as voice]
-           [clojure.core.async :as async]))
+           [clojure.core.async :as async])
+
+  (import [com.atul.JavaOpenCV Imshow]))
+
+
 
 
 (import '[org.opencv.core MatOfInt MatOfByte MatOfRect Mat CvType Size Scalar Rect]
@@ -16,6 +21,7 @@
         '[org.opencv.objdetect CascadeClassifier])
 
 
+(def imshow (Imshow. "Dameon Sight"))
 (def saw-face-last-frame (atom false))
 (def conseq-face-count (atom 0))
 (def tree (atom (stree/create)))
@@ -23,18 +29,21 @@
 (def recognize-emotion (atom nil))
 (def stream-on-face-running (ref false))
 
+
+(eyes/see tree)
+
 (defn remove-stream-on-face []
   (dosync (ref-set stream-on-face-running false))
-  (face/deactivate-mat-display))
-
+  ;;(face/deactivate-mat-display)
+  )
 
 (defn display-basic-vision []
-  (face/activate-mat-display)
   (swap! tree stree/add
          (->> (stream/->Base-stream []
                                     [#(do
                                         (spit "display-basic-vision.log" (str % "\n") :append true)
-                                        (face/update-mat-to-display (% :smart-mat)))]
+                                        ;;(visualizer/update-mat-to-display (% :smart-mat))
+                                        )]
                                     :base-stream)
           (stream/set-fps 20))))
 
@@ -75,9 +84,8 @@
    (let [emotion
          (emotion-recognition-to-ai-emotion-map
           (emotion-recognition/get-emotion-with-highest-confidence emotion-response))]
-     (face/change-emotion emotion)
-     (if (= emotion :sadness)
-       (youtube/play :chopin-nocturne))))
+     ;;(face/change-emotion emotion)
+     (if (= emotion :sadness) :pass)))
 
 (defn send-frame-to-emotion-recognition []
   (swap! tree stree/add
@@ -97,8 +105,30 @@
 
 
 (defn stop-display-basic-vision []
-  (face/deactivate-mat-display)
+  ;;(face/deactivate-mat-display)
   (swap! tree (fn [ignore] (stree/create))))
+
+(def prev-smart-mat (atom (smart-atom/create (Mat.))))
+
+(defn display-pushup-counter []
+  (stop-display-basic-vision)
+  (swap! tree stree/add
+         (->> (stream/->PushupDetectionStream
+               []
+               [#(let [img (smart-atom/deref (% :smart-mat))]
+                   (let [old-smart-mat @prev-smart-mat]
+                     (swap! prev-smart-mat (constantly (smart-atom/copy (% :smart-mat))))
+                     (smart-atom/delete old-smart-mat))
+                   ;(Imgcodecs/imwrite "out.jpg" img)
+                   (.showImage imshow img)
+                   )]
+               :pushup-counter)
+              (stream/set-fps 10))))
+
+
+
+
+
 
 
 

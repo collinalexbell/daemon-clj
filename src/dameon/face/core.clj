@@ -192,7 +192,8 @@
             (/ @settings/width settings/face-image-width)))
     (repl/display state))
   (q/fill 255))
-  
+
+ 
 ;(go (>! "Hello there"))
 
 (defn create []
@@ -203,6 +204,8 @@
    :update update-state
    :draw draw
    :middleware [m/fun-mode]))
+
+
 
 
 (defn change-emotion

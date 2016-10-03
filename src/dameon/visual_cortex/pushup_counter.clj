@@ -116,7 +116,8 @@
       (.release rv)
       {:smart-mat new-frame})))
 
-
+(defn init []
+  (swap! pushup-count (constantly 0)))
 
 
 

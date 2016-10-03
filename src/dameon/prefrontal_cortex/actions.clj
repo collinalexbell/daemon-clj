@@ -33,6 +33,10 @@
        (if (and (= cur-conversation :tweet?) (> (.indexOf (:data cur-state) "yes") -1))
          (do (twitter/tweet (@temporal-lobe/state :user-status))
              (voice/speak "I sent the tweet. Is there anything else I can do for you?")))
+       (if (> (.indexOf (:data cur-state) "pushup") -1)
+         (pfc/do-best-action {:num-pushups 5} :count-pushups))
+       (if (> (.indexOf (:data cur-state) "yes") -1)
+         (voice/speak "Ok. I am logging your workout."))
        (if (> (.indexOf (:data cur-state) "calendar") -1)
          (pfc/do-best-action nil :tell-me-todays-events))
        (if (> (.indexOf (:data cur-state) "change emotion"))
@@ -65,7 +69,11 @@
 
    :update-user-status
    temporal-lobe/update-user-status
-   })
+
+   :count-pushups
+   (fn [cur-state]
+     (voice/speak "Ok.")
+     (visual-cortex/display-pushup-counter (cur-state :num-pushups)))})
 
 (defn add-all []
   (doall

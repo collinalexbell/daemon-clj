@@ -8,7 +8,8 @@
            ;;[dameon.visual-cortex.visualizer :as visualizer]
            [dameon.smart-atom :as smart-atom]
            [dameon.voice.core :as voice]
-           [clojure.core.async :as async])
+           [clojure.core.async :as async]
+           [dameon.visual-cortex.pushup-counter :as pushup])
 
   (import [com.atul.JavaOpenCV Imshow]))
 
@@ -110,8 +111,9 @@
 
 (def prev-smart-mat (atom (smart-atom/create (Mat.))))
 
-(defn display-pushup-counter []
+(defn display-pushup-counter [stop-at-num]
   (stop-display-basic-vision)
+  (pushup/init)
   (swap! tree stree/add
          (->> (stream/->PushupDetectionStream
                []
@@ -121,7 +123,11 @@
                      (smart-atom/delete old-smart-mat))
                    ;(Imgcodecs/imwrite "out.jpg" img)
                    (.showImage imshow img)
-                   )]
+                   (if (>= @pushup/pushup-count stop-at-num)
+                     (do
+                       (stop-display-basic-vision)
+                       (Thread/sleep 800)
+                       (voice/speak "You have finished your workout, would you like me to log that for you?"))))]
                :pushup-counter)
               (stream/set-fps 10))))
 

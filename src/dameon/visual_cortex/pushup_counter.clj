@@ -15,6 +15,9 @@
 (def pushup-plot (time-series-plot [] []))
 (view pushup-plot)
 
+(def last-pushup-time (atom 99999999999999999))
+(def already-bitched (atom false))
+(def maximum-break 5000) ;in ms
 (def pushup-count (atom 0))
 (def last-frames (atom []))
 (def last-frame (atom nil))
@@ -68,7 +71,12 @@
 (defn handle-pushup-experience []
   (add-points pushup-plot [(System/currentTimeMillis)] [1])
   (swap! pushup-count + 1)
+  (swap! last-pushup-time (fn [ignore] (System/currentTimeMillis)))
+  (swap! already-bitched (constantly false))
   (voice/speak @pushup-count))
+
+(defn handle-too-long-of-break []
+  (voice/speak "You are taking too long of a break"))
 
 (defn get-motion [new-frame]
   (swap! last-frame (constantly (smart-atom/deref new-frame)))
@@ -88,6 +96,14 @@
                          Core/FONT_HERSHEY_PLAIN 3 (Scalar. 0.0) 2)
 
         (add-points plot [(System/currentTimeMillis)] (centroid :y))
+        (if (and
+             (not @already-bitched)
+             (> @pushup-count 0)
+             (> (-  (System/currentTimeMillis) @last-pushup-time) maximum-break))
+          (do
+            (swap! already-bitched (constantly true))
+            (handle-too-long-of-break)
+            ))
         (if (experienced-pushup? centroid dydx)
           (handle-pushup-experience))
         (if (experienced-v-sign-flip? centroid dydx)
@@ -96,7 +112,7 @@
           (swap! centroid-extream (constantly (centroid :y))))
         (swap! last-centroid (constantly centroid))
         (swap! last-dydx (constantly dydx))
-        (catch Exception e (println (.getMessage e))))
+        (catch Exception e  (println (.getMethodName (.getStackTrace e)))))
       (.release rv)
       {:smart-mat new-frame})))
 

@@ -1,6 +1,7 @@
 (ns dameon.visual-cortex.pushup-counter
   (:require
-   [dameon.smart-atom :as smart-atom])
+   [dameon.smart-atom :as smart-atom]
+   [dameon.voice.core :as voice])
   (:import org.httpkit.BytesInputStream
            [org.opencv.core MatOfByte Core Mat Point Scalar]
            [org.opencv.imgcodecs Imgcodecs]
@@ -11,9 +12,10 @@
 (def plot (time-series-plot [] []))
 (view plot)
 
-def pushup-plot (time-series-plot [] []))
+(def pushup-plot (time-series-plot [] []))
 (view pushup-plot)
 
+(def pushup-count (atom 0))
 (def last-frames (atom []))
 (def last-frame (atom nil))
 (def frame-history-size 3)
@@ -64,7 +66,9 @@ def pushup-plot (time-series-plot [] []))
     false))
 
 (defn handle-pushup-experience []
-  (add-points pushup-plot [(System/currentTimeMillis)] [1]))
+  (add-points pushup-plot [(System/currentTimeMillis)] [1])
+  (swap! pushup-count + 1)
+  (voice/speak @pushup-count))
 
 (defn get-motion [new-frame]
   (swap! last-frame (constantly (smart-atom/deref new-frame)))
@@ -76,11 +80,12 @@ def pushup-plot (time-series-plot [] []))
     (let [centroid (get-centroid rv)
           dydx     (get-centroid-dydx centroid)]
       (try
-        (Imgproc/rectangle rv (Point. 20 20) (Point. 120 60) (Scalar. 255.0) -1)
-        (Imgproc/putText rv (str "y: "
-                                 (centroid :y))
-                         (Point. 25 35)
-                         Core/FONT_HERSHEY_PLAIN 1 (Scalar. 0.0) 2)
+        (Imgproc/rectangle (smart-atom/deref new-frame) (Point. 20 20) (Point. 160 100) (Scalar. 255.0 255.0 255.0) -1)
+        (Imgproc/putText (smart-atom/deref new-frame) (str @pushup-count)
+                         (if (> @pushup-count 9)
+                           (Point. 65 73)
+                           (Point. 75 73))
+                         Core/FONT_HERSHEY_PLAIN 3 (Scalar. 0.0) 2)
 
         (add-points plot [(System/currentTimeMillis)] (centroid :y))
         (if (experienced-pushup? centroid dydx)
@@ -92,7 +97,8 @@ def pushup-plot (time-series-plot [] []))
         (swap! last-centroid (constantly centroid))
         (swap! last-dydx (constantly dydx))
         (catch Exception e (println (.getMessage e))))
-      {:smart-mat (smart-atom/create rv)})))
+      (.release rv)
+      {:smart-mat new-frame})))
 
 
 

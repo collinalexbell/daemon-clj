@@ -17,7 +17,7 @@
 
 (def last-pushup-time (atom 99999999999999999))
 (def already-bitched (atom false))
-(def maximum-break 5000) ;in ms
+(def maximum-break 3200) ;in ms
 (def pushup-count (atom 0))
 (def last-frames (atom []))
 (def last-frame (atom nil))

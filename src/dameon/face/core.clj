@@ -199,7 +199,7 @@
 (defn create []
  (q/defsketch dameon-face
    :size [@settings/width @settings/height]
-   :features [:resizeable :no-safe-fns :keep-on-top]
+   :features [:resizeable :no-safe-fns]
    :setup setup
    :update update-state
    :draw draw

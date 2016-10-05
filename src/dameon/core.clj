@@ -40,11 +40,11 @@
   (face/change-emotion :nervous)
   (Thread/sleep 2000)
   (face/change-emotion :urgent)
-  (Thread/sleep 1500)
+  (Thread/sleep 2000)
   (face/change-emotion :understand)
-  (Thread/sleep 1500)
+  (Thread/sleep 2000)
   (face/change-emotion :listen)
-  (Thread/sleep 1500)
+  (Thread/sleep 2000)
   (face/change-emotion :happy))
 
 

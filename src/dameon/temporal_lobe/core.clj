@@ -7,7 +7,8 @@
    [clojure.core.async :as async]
    [overtone.at-at :as at-at]
    [dameon.prefrontal-cortex.core :as pfc]
-   [dameon.temporal-lobe.twitter :as twitter]))
+   [dameon.temporal-lobe.twitter :as twitter]
+   [dameon.visual-cortex.youtube-player :as youtube-player]))
 
 (def state (atom {}))
 (def my-pool nil)
@@ -61,36 +62,68 @@
       actions))
    my-pool))
 
-(defmacro if-in-str [needle haystack is-present-form is-not-present-form]
-  (if (> (.indexOf haystack needle) -1)
-    true
-    false))
+(defmacro if-in-str [haystack & clauses]
+  (cons
+   'do
+   (map
+    (fn [clause]
+      (let [needle (first clause)
+            is-present-form (second clause)
+            is-not-present-form (nth clause 2 nil)]
+        `(if (> (.indexOf ~haystack ~needle) -1)
+           ~is-present-form
+           ~is-not-present-form)))
+    clauses)))
 
 (defn act-on-speech [cur-state]
   (println "acting on speech")
-  (let [cur-conversation (@state :cur-conversation)]
+  (let [cur-conversation (@state :cur-conversation)
+        speech (:data cur-state)]
     (clear-cur-conversation)
     (if (= cur-conversation :status)
       (update-user-status (cur-state :data)))
     (if (and (= cur-conversation :tweet?) (> (.indexOf (:data cur-state) "yes") -1))
       (do (twitter/tweet (@state :user-status))
           (voice/speak "I sent the tweet. Is there anything else I can do for you?")))
-    (if (> (.indexOf (:data cur-state) "pushup") -1)
+    (if-in-str
+     speech
+     ("pushup"
       (pfc/do-best-action {:num-pushups 5} :count-pushups))
-    (if (> (.indexOf (:data cur-state) "calendar") -1)
+     ("calendar"
       (pfc/do-best-action nil :tell-me-todays-events))
-    (if (> (.indexOf (:data cur-state) "change emotion"))
-      (if (> (.indexOf (:data cur-state) "happy") -1)
-        (face/change-emotion :happy)))
-    (if (> (.indexOf (:data cur-state) "maximize") -1)
-      (face/maximize face/dameon-face))
-    (if (> (.indexOf (:data cur-state) "restore") -1)
+     ("change emotion"
+      (if-in-str speech ("happy" (face/change-emotion :happy))))
+     ("restore"
       (face/restore face/dameon-face))
-    (if (> (.indexOf (:data cur-state) "play") -1)
-      (if (> (.indexOf (:data cur-state) "stop pla") -1)
-        (youtube-player/stop-player)
-        (youtube-player/play-most-popular-by-search-term
-         (clojure.string/replace (:data cur-state) #"play" ""))))))
+     ("maximize"
+      (face/maximize face/dameon-face))
+     ("play"
+      (if-in-str speech ("stop pla"
+                         (youtube-player/stop-player)
+                         (youtube-player/play-most-popular-by-search-term
+                          (clojure.string/replace (:data cur-state) #"play" ""))))))))
+
+
+
+
+(let [speech "calendar"]
+ (macroexpand '(if-in-str
+               speech
+               ("pushup"
+                (pfc/do-best-action {:num-pushups 5} :count-pushups))
+               ("calendar"
+                (pfc/do-best-action nil :tell-me-todays-events))
+               ("change emotion"
+                (if-in-str speech ("happy" (face/change-emotion :happy))))
+               ("restore"
+                (face/restore face/dameon-face))
+               ("maximize"
+                (face/maximize face/dameon-face))
+               ("play"
+                (if-in-str speech ("stop pla"
+                                   (youtube-player/stop-player)
+                                   (youtube-player/play-most-popular-by-search-term
+                                    (clojure.string/replace speech #"play" ""))))))))
 
 
 

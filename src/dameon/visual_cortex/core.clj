@@ -10,7 +10,6 @@
            [dameon.voice.core :as voice]
            [clojure.core.async :as async]
            [dameon.visual-cortex.pushup-counter :as pushup])
-
   (import [com.atul.JavaOpenCV Imshow]))
 
 
@@ -22,16 +21,18 @@
         '[org.opencv.objdetect CascadeClassifier])
 
 
-(def imshow (Imshow. "Dameon Sight"))
 (def saw-face-last-frame (atom false))
 (def conseq-face-count (atom 0))
 (def tree (atom (stree/create)))
 (def detect-face (atom nil))
 (def recognize-emotion (atom nil))
 (def stream-on-face-running (ref false))
+(def imshow nil)
 
 
-(eyes/see tree)
+(defn init []
+  (def imshow (Imshow. "Dameon Sight"))
+  (eyes/see tree))
 
 (defn remove-stream-on-face []
   (dosync (ref-set stream-on-face-running false))

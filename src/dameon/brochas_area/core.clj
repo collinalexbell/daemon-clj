@@ -52,7 +52,8 @@
             (get @(request-new-access-token) :body)))))
 
 ;;Get the initial access token
-(async/go (set-new-access-token) (swap! initialized (constantly true)))
+(defn init []
+  (async/go (set-new-access-token) (swap! initialized (constantly true))))
 
 (defn get-access-token
   "Returns the access token string"

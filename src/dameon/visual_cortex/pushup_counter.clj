@@ -1,20 +1,18 @@
 (ns dameon.visual-cortex.pushup-counter
   (:require
    [dameon.smart-atom :as smart-atom]
-   [dameon.voice.core :as voice])
+   [dameon.voice.core :as voice]
+   [clojure.math.numeric-tower :as math])
   (:import org.httpkit.BytesInputStream
            [org.opencv.core MatOfByte Core Mat Point Scalar]
            [org.opencv.imgcodecs Imgcodecs]
            [org.opencv.imgproc Imgproc]
            [org.opencv.video Video])
-  (:use [incanter core stats charts io]))
+  ;(:use [incanter core stats charts io])
+  )
 
-(def plot (time-series-plot [] []))
-(view plot)
-
-(def pushup-plot (time-series-plot [] []))
-(view pushup-plot)
-
+(def plot nil)
+(def pushup-plot nil)
 (def last-pushup-time (atom 99999999999999999))
 (def already-bitched (atom false))
 (def maximum-break 3200) ;in ms
@@ -24,8 +22,7 @@
 (def frame-history-size 3)
 (def test-frame (atom nil))
 (def test-exception (atom nil))
-(def fgbg  (Video/createBackgroundSubtractorMOG2))
-(.setHistory fgbg 50)
+(def fgbg  nil)
 
 (defn add-frame [frame]
   (try (if (= (count @last-frames) frame-history-size)
@@ -64,12 +61,12 @@
        @centroid-extream
        (experienced-v-sign-flip? new-centroid new-dydx)
        (< @last-dydx 0)
-       (> (abs (- @centroid-extream (new-centroid :y))) movement-threshold))
+       (> (math/abs (- @centroid-extream (new-centroid :y))) movement-threshold))
     true
     false))
 
 (defn handle-pushup-experience []
-  (add-points pushup-plot [(System/currentTimeMillis)] [1])
+  ;(add-points pushup-plot [(System/currentTimeMillis)] [1])
   (swap! pushup-count + 1)
   (swap! last-pushup-time (fn [ignore] (System/currentTimeMillis)))
   (swap! already-bitched (constantly false))
@@ -95,7 +92,7 @@
                            (Point. 75 73))
                          Core/FONT_HERSHEY_PLAIN 3 (Scalar. 0.0) 2)
 
-        (add-points plot [(System/currentTimeMillis)] (centroid :y))
+        ;(add-points plot [(System/currentTimeMillis)] (centroid :y))
         (if (and
              (not @already-bitched)
              (> @pushup-count 0)
@@ -117,7 +114,11 @@
       {:smart-mat new-frame})))
 
 (defn init []
-  (swap! pushup-count (constantly 0)))
+  (swap! pushup-count (constantly 0))
+  ;(def plot (time-series-plot [] []))
+  ;(def pushup-plot (time-series-plot [] []))
+  (def fgbg  (Video/createBackgroundSubtractorMOG2))
+  (.setHistory fgbg 50))
 
 
 

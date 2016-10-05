@@ -13,17 +13,14 @@
            [dameon.smart-atom :as smart-atom]
            [dameon.keyboard-listener :as keyboard-listener]
            [dameon.prefrontal-cortex.actions :as actions]
-           [dameon.temporal-lobe.core :as temporal-lobe]))
+           [dameon.temporal-lobe.core :as temporal-lobe])
+  (use [clojure.tools.nrepl.server :only (start-server stop-server)]))
+
 
 (import '[java.util.Timer])
 
 (def user "Collin")
 
-(defn init []
-  (actions/add-all)
-  (keyboard-listener/start prefrontal-cortex/input))
-
-(init)
 
 (defn start-greeter []
   (prefrontal-cortex/remove-possible-action :greet)
@@ -48,4 +45,11 @@
   (face/change-emotion :happy))
 
 
+(defn -main []
+  (brochas-area/init)
+  (eyes/init)
+  (visual-cortex/init)
+  (actions/add-all)
+  (keyboard-listener/start prefrontal-cortex/input)
+  (defonce server (start-server :port 4242)))
 

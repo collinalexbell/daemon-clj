@@ -105,8 +105,6 @@
       (swap! finished (constantly false))
       (async/go (play-wav audio-clip))))
 
-@finished
-
 
 
 

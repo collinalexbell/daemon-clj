@@ -18,9 +18,12 @@
 (def gc-freq-in-mins (* 60 2))
 
 (def subscribers (ref []))
-(def video-feed (VideoCapture. 0))
 (def continue-seeing (ref false))
-(def cur-see-thread (atom (Thread. (fn []))))
+(def cur-see-thread (atom nil))
+(def video-feed (atom nil))
+(defn init []
+  (def cur-see-thread (atom (Thread. (fn []))))
+  (def video-feed (VideoCapture. 0)))
 
 (defn get-field-of-vision []
   [(int (.get video-feed (. Videoio CAP_PROP_FRAME_WIDTH)))

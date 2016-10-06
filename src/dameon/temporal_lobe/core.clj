@@ -53,9 +53,12 @@
     (reverse (clojure.string/split time-string #":")) 
     [1000 (* 1000 60) (* 1000 60 60) (* 1000 60 60 24)])))
 
-(defn set-alarm [time-string & actions]
+
+(defn set-alarm [time-string-or-ms & actions]
   (at-at/after
-   (parse-time-string-into-ms time-string)
+   (if (string? time-string-or-ms)
+     (parse-time-string-into-ms time-string-or-ms)
+     time-string-or-ms)
    #(doall
      (map
       (fn [action] (action))
@@ -74,6 +77,11 @@
            ~is-present-form
            ~is-not-present-form)))
     clauses)))
+
+(defn set-alarm-on-speech []
+  (clojure.string/split
+   (clojure.string/replace speech #"set alarm" "")
+   #" "))
 
 (defn act-on-speech [cur-state]
   (println "acting on speech")
@@ -101,29 +109,38 @@
       (if-in-str speech ("stop pla"
                          (youtube-player/stop-player)
                          (youtube-player/play-most-popular-by-search-term
-                          (clojure.string/replace (:data cur-state) #"play" ""))))))))
+                          (clojure.string/replace (:data cur-state) #"play" "")))))
+     ("set alarm"
+      (set-alarm-on-speech speech)
+      ))))
+
+
+(def meditations
+  (clojure.string/split (slurp "resources/meditation.edn") #"\n"))
+
+(defn index-of [item coll]
+  (count (take-while (partial not= item) coll)))
+
+(defn meditate [total-time-to-meditate meditations]
+  (run!
+   #(set-alarm
+     (int
+      (* (+ 1 (index-of % meditations))
+       (/
+        (parse-time-string-into-ms total-time-to-meditate)
+        (+ 1 (count meditations)))))
+    (fn [] (voice/speak (str "Meditate about " %))))
+   meditations)
+  (set-alarm total-time-to-meditate #(voice/speak "You have finished your meditation!"))
+  (voice/speak "Starting meditation"))
 
 
 
 
-(let [speech "calendar"]
- (macroexpand '(if-in-str
-               speech
-               ("pushup"
-                (pfc/do-best-action {:num-pushups 5} :count-pushups))
-               ("calendar"
-                (pfc/do-best-action nil :tell-me-todays-events))
-               ("change emotion"
-                (if-in-str speech ("happy" (face/change-emotion :happy))))
-               ("restore"
-                (face/restore face/dameon-face))
-               ("maximize"
-                (face/maximize face/dameon-face))
-               ("play"
-                (if-in-str speech ("stop pla"
-                                   (youtube-player/stop-player)
-                                   (youtube-player/play-most-popular-by-search-term
-                                    (clojure.string/replace speech #"play" ""))))))))
+
+
+
+
 
 
 

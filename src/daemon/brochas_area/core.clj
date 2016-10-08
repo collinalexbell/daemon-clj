@@ -58,7 +58,7 @@
 (defn get-access-token
   "Returns the access token string"
   []
-  (if (nil? access-token)
+  (if (nil? @access-token)
     (set-new-access-token))
   (if (> (System/currentTimeMillis) (get @access-token :expiration-time))
     (set-new-access-token))
@@ -108,6 +108,7 @@
           (java.io.File. file-name)))))
     (println "reading audio")
     (slurp-bytes file-name)))
+
 
 (defn interpret-speech [sound-bytes]
   (face/change-emotion :understand)

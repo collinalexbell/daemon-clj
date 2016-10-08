@@ -16,3 +16,4 @@ cerevoice/
 creds.edn
 /resources/watson_voice_cache/*
 /resources/meditation.edn
+/libs

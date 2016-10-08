@@ -238,16 +238,3 @@ API so that users can create their own applications
 *** Make a macro that can generate the listener code for the twitter listener
 
 		
-** Project ~ Road to v2
-
-** Tasks
-*** TODO Better startup.
-**** Make it startable with one click!
-
-*** TODO Ask it to make an alarm.
-*** TODO Graphical menu
-*** TODO Task Time Logger
-*** TODO Filter out "I am listening"
-*** TODO Create meditation timer
-*** TODO Find a way to cancel alarms
-*** TODO Make checkup alarm

@@ -79,10 +79,13 @@
            ~is-not-present-form)))
     clauses)))
 
+(defn pre-process-speech [speech]
+  (clojure.string/replace speech #"\." ""))
+
 (defn act-on-speech [cur-state]
   (println "acting on speech")
   (let [cur-conversation (@state :cur-conversation)
-        speech (:data cur-state)]
+        speech (pre-process-speech (:data cur-state))]
     (clear-cur-conversation)
     (if (= cur-conversation :status)
       (update-user-status (cur-state :data)))

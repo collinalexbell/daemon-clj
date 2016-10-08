@@ -51,5 +51,16 @@
   (visual-cortex/init)
   (actions/add-all)
   (keyboard-listener/start prefrontal-cortex/input)
+  (temporal-lobe/init)
   (defonce server (start-server :port 4242)))
+
+
+
+
+
+
+
+
+
+
 

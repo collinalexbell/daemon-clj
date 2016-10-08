@@ -1,4 +1,4 @@
-(defproject dameon "0.1.0-SNAPSHOT"
+(defproject daemon "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -27,7 +27,7 @@
   :plugins [[lein-ns-dep-graph "0.1.0-SNAPSHOT"]
             [cider/cider-nrepl "0.13.0"]]
   :jvm-opts ^:replace []
-  :main dameon.core)
+  :main daemon.core)
 
 
 

@@ -24,7 +24,8 @@
         (brochas-area/record-and-interpret-speech 5000 pfc/input)))
 
    :act-on-speech
-   temporal-lobe/act-on-speech
+   (fn [cur-state]
+     (temporal-lobe/act-on-speech))
 
    :tell-me-todays-events
    (fn [cur-state]

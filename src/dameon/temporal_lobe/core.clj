@@ -8,7 +8,8 @@
    [overtone.at-at :as at-at]
    [dameon.prefrontal-cortex.core :as pfc]
    [dameon.temporal-lobe.twitter :as twitter]
-   [dameon.visual-cortex.youtube-player :as youtube-player]))
+   [dameon.visual-cortex.youtube-player :as youtube-player]
+   [dameon.temporal-lobe.wiki-search :as wiki]))
 
 (def state (atom {}))
 (def my-pool nil)
@@ -78,11 +79,6 @@
            ~is-not-present-form)))
     clauses)))
 
-(defn set-alarm-on-speech []
-  (clojure.string/split
-   (clojure.string/replace speech #"set alarm" "")
-   #" "))
-
 (defn act-on-speech [cur-state]
   (println "acting on speech")
   (let [cur-conversation (@state :cur-conversation)
@@ -111,8 +107,11 @@
                          (youtube-player/play-most-popular-by-search-term
                           (clojure.string/replace (:data cur-state) #"play" "")))))
      ("set alarm"
-      (set-alarm-on-speech speech)
-      ))))
+      :pass)
+     ("search wikipedia for"
+      (wiki/search
+       (clojure.string/replace
+        speech #"search wikipedia for" ""))))))
 
 
 (def meditations
@@ -133,15 +132,6 @@
    meditations)
   (set-alarm total-time-to-meditate #(voice/speak "You have finished your meditation!"))
   (voice/speak "Starting meditation"))
-
-
-
-
-
-
-
-
-
 
 
 

@@ -103,8 +103,10 @@
 
 (defn get-interrupts-by-id-set [id-set]
   (filter
-   #(contains? id-set (get % :id))
-   (at-at/scheduled-jobs interrupts)))
+   #(if (empty? id-set)
+      true
+      (contains? id-set (get % :id)))
+      (at-at/scheduled-jobs interrupts)))
 
 (defn is-are [count]
   (if (= count 1)
@@ -134,26 +136,10 @@
      (gen-interupt-speak-intro (count filtered-interrupts))
      filtered-interrupts))))
 
-(defmacro speak-interupts*
-  [& stuff])
-
-;;example
-;;(list-active-interupts after "1:00 " before "2:00" in-category :sexy limit-to 5)
-
 (defn delete-interupts [id-set]
   (run!
    #(at-at/kill %)
    (get-interrupts-by-id-set id-set)))
-
-(defmacro delete-interupts* [& stuff])
-
-;;;example calls
-;;;(delete-interupts
-;;; in-category :awesome
-;;; with-ids [0 1 2]
-;;; after "2:00"
-;;; before "4:00")
-
 
 
 

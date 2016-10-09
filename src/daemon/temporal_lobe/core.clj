@@ -10,7 +10,8 @@
    [daemon.temporal-lobe.twitter :as twitter]
    [daemon.visual-cortex.youtube-player :as youtube-player]
    [daemon.temporal-lobe.wiki-search :as wiki]
-   [daemon.temporal-lobe.interrupt :as interrupt]))
+   [daemon.temporal-lobe.interrupt :as interrupt]
+   [daemon.utils.time :as util-time]))
 
 (def state (atom {}))
 (def my-pool nil)
@@ -37,13 +38,18 @@
   (voice/speak "Would you like me to tweet that for you?")
   (set-cur-conversation :tweet?))
 
-(defn anticipate-vocal-input [time]
+(defn anticipate-vocal-input
+  "Sets a piece of state that the prefrontal-cortex uses to know when to not be 
+  as indicitive of when the daemon is listening (...doesn't say 'i am listening')"
+  [time]
   (swap! state assoc :anticipate-vocal-input true)
   ;;Stop the anticipation after time
   (async/go (do (Thread/sleep time)
                 (swap! state assoc :anticipate-vocal-input false))))
 
-(defn greet [name]
+(defn greet
+  "Greets a person and provokes a status update"
+  [name]
   (face/change-emotion :urgent)
   (voice/speak (str "Good morning " name ", what have you been doing?"))
   (while (voice/is-speaking) :default)
@@ -51,29 +57,6 @@
   (set-cur-conversation :status)
   (anticipate-vocal-input 5000))
  
-
-
-(defn parse-time-string-into-ms [time-string]
-  ;;Count the colons, that will tell you what the first numbers should be
-  (apply
-   +
-   (map
-    #(* (Integer/parseInt %1)  %2)
-    (reverse (clojure.string/split time-string #":")) 
-    [1000 (* 1000 60) (* 1000 60 60) (* 1000 60 60 24)])))
-
-
-(defn set-alarm [time-string-or-ms & actions]
-  (at-at/after
-   (if (string? time-string-or-ms)
-     (parse-time-string-into-ms time-string-or-ms)
-     time-string-or-ms)
-   #(doall
-     (map
-      (fn [action] (action))
-      actions))
-   my-pool))
-
 (defmacro if-in-str [haystack & clauses]
   (cons
    'do
@@ -108,7 +91,7 @@
            (/ (int
                (* (+ 1 (index-of % meditations))
                   (/
-                   (parse-time-string-into-ms total-time-to-meditate)
+                   (util-time/parse-time-string-into-ms total-time-to-meditate)
                    (+ 1 (count meditations))))) 1000)))
     that-says (str "Meditate about " %))
    meditations)
@@ -116,8 +99,6 @@
    in total-time-to-meditate
    that-says "You have finished your meditation!")
   (voice/speak "Starting meditation"))
-
-
 
 (defn act-on-speech [cur-state]
   (println "acting on speech")

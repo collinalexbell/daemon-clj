@@ -33,30 +33,35 @@
    interrupts
    :desc desc))
 
-(defn parse-fire-interrupt-symbols
+(defmacro parse-fire-interrupt-symbols
   [m s]
-  (apply assoc-in
-         (case (name (first s))
+  `(apply assoc-in
+          ~m
+         (case (name (first ~s))
            "in"
-           `(~m [:time] ~(second s))
+           `([:time] ~(second ~s))
            "named"
-           `(~m [:desc :name] ~(second s))
+           `([:desc :name] ~(second ~s))
            "that-says"
-           `(~m [:actions]
+           `([:actions]
              ~(conj
-               (get m :actions [])
-               #(voice/speak (second s))))
+               (get ~m :actions [])
+               `(fn [] (voice/speak ~(second ~s)))))
            "then-waits"
-           `(~m [:actions]
+           `([:actions]
              ~(conj
-               (get m :actions [])
-               #(Thread/sleep (parse-time-string-into-ms
-                               (second s)))))
+               (get ~m :actions [])
+               `(fn [] (Thread/sleep (parse-time-string-into-ms
+                                      ~(second ~s))))))
            "then-says"
-           `(~m [:actions]
+           `([:actions]
              ~(conj
-               (get m :actions [])
-               #(voice/speak (second s)))))))
+               (get ~m :actions [])
+               `(fn [] (voice/speak ~(second ~s))))))))
+
+(let [a {}
+      b [(symbol "then-waits") "20"]]
+ (parse-fire-interrupt-symbols a b))
 
 
 (defmacro fire-interrupt*
@@ -76,11 +81,10 @@
       [data
        (let [s (partition 2 stuff)]
          (reduce
-          parse-fire-interrupt-symbols 
+          (fn [a b] (parse-fire-interrupt-symbols a b)) 
           {}
           s))]
-    (apply add-interrupt (data :time) (data :desc) (data :actions)))
-  nil)
+    `(apply ~'add-interrupt ~(data :time) ~(data :desc) ~(data :actions))))
 
 
 
@@ -140,8 +144,6 @@
   (run!
    #(at-at/kill %)
    (get-interrupts-by-id-set id-set)))
-
-
 
 
 

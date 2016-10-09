@@ -11,7 +11,8 @@
    [daemon.visual-cortex.youtube-player :as youtube-player]
    [daemon.temporal-lobe.wiki-search :as wiki]
    [daemon.temporal-lobe.interrupt :as interrupt]
-   [daemon.utils.time :as util-time]))
+   [daemon.utils.time :as util-time]
+   [daemon.utils.coll :as util-coll]))
 
 (def state (atom {}))
 (def my-pool nil)
@@ -57,7 +58,19 @@
   (set-cur-conversation :status)
   (anticipate-vocal-input 5000))
  
-(defmacro if-in-str [haystack & clauses]
+(defmacro if-in-str
+  "Will run through a series of clauses testing if the a string is present in the haystack and then executing code if it is or isnt
+  
+  Example usage:
+(if-in-str
+     \"bar\"
+     (\"foo\"
+       (println \"has foo\")
+        (println \"does not have foo\"))
+     (\"bar\"
+      (println \"has bar\")"
+
+  [haystack & clauses]
   (cons
    'do
    (map
@@ -70,26 +83,25 @@
            ~is-not-present-form)))
     clauses)))
 
-(defn pre-process-speech [speech]
+(defn pre-process-speech
+  "Right now it just strips out periods. It will probably change in the future"
+  [speech]
   (clojure.string/replace speech #"\." ""))
-
-(defn parse-int [s]
-   (Integer. (re-find  #"\d+" s )))
 
 
 (def meditations
   (clojure.string/split (slurp "resources/meditation.edn") #"\n"))
 
-(defn index-of [item coll]
-  (count (take-while (partial not= item) coll)))
-
-(defn meditate [total-time-to-meditate meditations]
+(defn meditate
+  "Takes meditations as lines and total time to meditate in form ss or mm:ss or hh:mm:ss
+  Daemon will read each meditation mantra at evenly spaced times to take up the total meditation tim"
+  [total-time-to-meditate meditations]
   (run!
    #(interrupt/fire-interrupt*
      in
      (str (int
            (/ (int
-               (* (+ 1 (index-of % meditations))
+               (* (+ 1 (util-coll/index-of % meditations))
                   (/
                    (util-time/parse-time-string-into-ms total-time-to-meditate)
                    (+ 1 (count meditations))))) 1000)))
@@ -100,7 +112,10 @@
    that-says "You have finished your meditation!")
   (voice/speak "Starting meditation"))
 
-(defn act-on-speech [cur-state]
+(defn act-on-speech
+  "Recieves raw speech, preprocesses it, and then passes signals on accordingly (or calls funcitons)
+  Speech is stored in (cur-state :data)"
+  [cur-state]
   (println "acting on speech")
   (let [cur-conversation (@state :cur-conversation)
         speech (pre-process-speech (:data cur-state))]

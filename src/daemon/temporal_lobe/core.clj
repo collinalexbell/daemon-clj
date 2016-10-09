@@ -19,13 +19,20 @@
 
 
 
-(defn set-cur-conversation [cur-conversation]
+(defn- set-cur-conversation
+  "Sets a piece of state that keeps track of last topic talked about"
+  [cur-conversation]
   (swap! state assoc :cur-conversation cur-conversation))
 
-(defn clear-cur-conversation []
+(defn- clear-cur-conversation
+  "Wipes state about cur conversation"
+  []
   (swap! state assoc :cur-conversation nil))
 
-(defn update-user-status [status]
+(defn update-user-status
+  "Sets a piece of state that keeps track of my status 
+  and then asks if I want to tweet my status"
+  [status]
   (swap! state assoc :user-status status)
   (voice/speak "Would you like me to tweet that for you?")
   (set-cur-conversation :tweet?))
@@ -83,6 +90,35 @@
 (defn pre-process-speech [speech]
   (clojure.string/replace speech #"\." ""))
 
+(defn parse-int [s]
+   (Integer. (re-find  #"\d+" s )))
+
+
+(def meditations
+  (clojure.string/split (slurp "resources/meditation.edn") #"\n"))
+
+(defn index-of [item coll]
+  (count (take-while (partial not= item) coll)))
+
+(defn meditate [total-time-to-meditate meditations]
+  (run!
+   #(interrupt/fire-interrupt*
+     in
+     (str (int
+           (/ (int
+               (* (+ 1 (index-of % meditations))
+                  (/
+                   (parse-time-string-into-ms total-time-to-meditate)
+                   (+ 1 (count meditations))))) 1000)))
+    that-says (str "Meditate about " %))
+   meditations)
+  (interrupt/fire-interrupt*
+   in total-time-to-meditate
+   that-says "You have finished your meditation!")
+  (voice/speak "Starting meditation"))
+
+
+
 (defn act-on-speech [cur-state]
   (println "acting on speech")
   (let [cur-conversation (@state :cur-conversation)
@@ -95,6 +131,10 @@
           (voice/speak "I sent the tweet. Is there anything else I can do for you?")))
     (if-in-str
      speech
+     ("update my status"
+      (do
+        (set-cur-conversation :status)
+        (voice/speak "Ok. What is up?")))
      ("pushup"
       (pfc/do-best-action {:num-pushups 5} :count-pushups))
      ("calendar"
@@ -112,49 +152,15 @@
                           (clojure.string/replace (:data cur-state) #"play" "")))))
      ("set alarm"
       :pass)
+     ("meditate for"
+      (-> speech
+          (clojure.string/replace #"meditate for" "")
+          (clojure.string/replace #"minutes" "")
+          (clojure.string/trim)
+          (str ":00")
+          (meditate meditations)))
      ("search wikipedia for"
       (wiki/search
        (clojure.string/replace
         speech #"search wikipedia for" ""))))))
-
-
-(def meditations
-  (clojure.string/split (slurp "resources/meditation.edn") #"\n"))
-
-(defn index-of [item coll]
-  (count (take-while (partial not= item) coll)))
-
-(defn meditate [total-time-to-meditate meditations]
-  (run!
-   #(interrupt/fire-interrupt*
-     in
-     (str (/ (int
-          (* (+ 1 (index-of % meditations))
-             (/
-              (parse-time-string-into-ms total-time-to-meditate)
-              (+ 1 (count meditations))))) 1000))
-    that-says (str "Meditate about " %))
-   meditations)
-  (interrupt/fire-interrupt*
-   in total-time-to-meditate
-   that-says "You have finished your meditation!")
-  (voice/speak "Starting meditation"))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

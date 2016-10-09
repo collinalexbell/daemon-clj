@@ -10,6 +10,7 @@
 (def available-emotions
   [:happy :sad :determined :confused :exuberant])
 (def face-animation-folder "face_animations")
+(def todo-file "resources/todo.org")
 
 
 

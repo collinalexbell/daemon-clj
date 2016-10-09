@@ -18,5 +18,5 @@ creds.edn
 /resources/meditation.edn
 /libs
 speech-to-text.wav
-**.edn
+*.edn
 #*

@@ -33,17 +33,55 @@
    interrupts
    :desc desc))
 
-(defmacro add-interrupt*
-  [& stuff])
+(defn parse-fire-interrupt-symbols
+  [m s]
+  (apply assoc-in
+         (case (name (first s))
+           "in"
+           `(~m [:time] ~(second s))
+           "named"
+           `(~m [:desc :name] ~(second s))
+           "that-says"
+           `(~m [:actions]
+             ~(conj
+               (get m :actions [])
+               #(voice/speak (second s))))
+           "then-waits"
+           `(~m [:actions]
+             ~(conj
+               (get m :actions [])
+               #(Thread/sleep (parse-time-string-into-ms
+                               (second s)))))
+           "then-says"
+           `(~m [:actions]
+             ~(conj
+               (get m :actions [])
+               #(voice/speak (second s)))))))
 
 
-;;;example call
-;;;(add-interupt
-;;; in "2:00" ; ..at "3:00" (in means timer and at means alarm)
-;;; in-category :awesome
-;;; that-says "Hello World" 
-;;; then-waits "2" 
-;;; then-says "Goodby World")
+(defmacro fire-interrupt*
+  "Example Usage:
+
+  (fire-interupt*
+    named \"hello & goodby\"
+    in \"2:00\" 
+    ;; at \"3:00\" (in means timer and at means alarm)
+    that-says \"Hello World\" 
+    then-waits \"00:02\" 
+    then-says \"Goodby World\") "
+
+
+  [& stuff]
+  (let
+      [data
+       (let [s (partition 2 stuff)]
+         (reduce
+          parse-fire-interrupt-symbols 
+          {}
+          s))]
+    (apply add-interrupt (data :time) (data :desc) (data :actions)))
+  nil)
+
 
 
 ;;;example speech

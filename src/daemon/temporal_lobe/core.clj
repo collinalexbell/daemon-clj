@@ -9,7 +9,8 @@
    [daemon.prefrontal-cortex.core :as pfc]
    [daemon.temporal-lobe.twitter :as twitter]
    [daemon.visual-cortex.youtube-player :as youtube-player]
-   [daemon.temporal-lobe.wiki-search :as wiki]))
+   [daemon.temporal-lobe.wiki-search :as wiki]
+   [daemon.temporal-lobe.interrupt :as interrupt]))
 
 (def state (atom {}))
 (def my-pool nil)
@@ -125,16 +126,28 @@
 
 (defn meditate [total-time-to-meditate meditations]
   (run!
-   #(set-alarm
-     (int
-      (* (+ 1 (index-of % meditations))
-       (/
-        (parse-time-string-into-ms total-time-to-meditate)
-        (+ 1 (count meditations)))))
-    (fn [] (voice/speak (str "Meditate about " %))))
+   #(interrupt/fire-interrupt*
+     in
+     (str (/ (int
+          (* (+ 1 (index-of % meditations))
+             (/
+              (parse-time-string-into-ms total-time-to-meditate)
+              (+ 1 (count meditations))))) 1000))
+    that-says (str "Meditate about " %))
    meditations)
-  (set-alarm total-time-to-meditate #(voice/speak "You have finished your meditation!"))
+  (interrupt/fire-interrupt*
+   in total-time-to-meditate
+   that-says "You have finished your meditation!")
   (voice/speak "Starting meditation"))
+
+
+
+
+
+
+
+
+
 
 
 

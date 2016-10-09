@@ -84,7 +84,7 @@
           (fn [a b] (parse-fire-interrupt-symbols a b)) 
           {}
           s))]
-    `(apply ~'add-interrupt ~(data :time) ~(data :desc) ~(data :actions))))
+    `(apply add-interrupt ~(data :time) ~(data :desc) ~(data :actions))))
 
 
 
@@ -144,9 +144,6 @@
   (run!
    #(at-at/kill %)
    (get-interrupts-by-id-set id-set)))
-
-
-
 
 
 

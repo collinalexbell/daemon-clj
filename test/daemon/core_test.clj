@@ -1,4 +1,4 @@
-(ns dameon.core-test
+(ns daemon.core-test
   (:require [clojure.test :refer :all]
             [dameon.core :refer :all]))
 

@@ -19,4 +19,5 @@ creds.edn
 /libs
 speech-to-text.wav
 *.edn
+**.edn
 #*

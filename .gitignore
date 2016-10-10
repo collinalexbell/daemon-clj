@@ -21,4 +21,5 @@ speech-to-text.wav
 *.edn
 **.edn
 #*
+.#*
 /resources/tests/

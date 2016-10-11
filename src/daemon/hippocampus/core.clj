@@ -16,17 +16,6 @@
 
 
 
-(insert statuses
-        (values {:time (raw "NOW()") :text "integrating postgres sql into daemon"}))
-
-
-
-
-
-
-
-
-
 
 
 

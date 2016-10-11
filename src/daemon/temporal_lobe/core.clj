@@ -12,14 +12,15 @@
    [daemon.temporal-lobe.wiki-search :as wiki]
    [daemon.temporal-lobe.interrupt :as interrupt]
    [daemon.utils.time :as util-time]
-   [daemon.utils.coll :as util-coll]))
+   [daemon.utils.coll :as util-coll]
+   [korma.core :as k]))
 
 (def state (atom {}))
 (def my-pool nil)
 (defn init []
   (def my-pool (at-at/mk-pool)))
 
-
+(k/defentity statuses)
 
 (defn- set-cur-conversation
   "Sets a piece of state that keeps track of last topic talked about"
@@ -36,6 +37,12 @@
   and then asks if I want to tweet my status"
   [status]
   (swap! state assoc :user-status status)
+
+  ;;Put status into the db
+  (k/insert statuses
+          (k/values {:time (k/raw "NOW()") :text status}))
+
+
   (voice/speak "Would you like me to tweet that for you?")
   (set-cur-conversation :tweet?))
 

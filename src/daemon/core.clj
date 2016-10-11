@@ -13,7 +13,8 @@
            [daemon.smart-atom :as smart-atom]
            [daemon.keyboard-listener :as keyboard-listener]
            [daemon.prefrontal-cortex.actions :as actions]
-           [daemon.temporal-lobe.core :as temporal-lobe])
+           [daemon.temporal-lobe.core :as temporal-lobe]
+           [daemon.hippocampus.core])
   (use [clojure.tools.nrepl.server :only (start-server stop-server)]))
 
 

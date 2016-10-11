@@ -7,7 +7,7 @@
 (def double-tap-delay-in-ms 120)
 
 (defn cursor-handler [state]
- (if (> (state :cur-frame-no) (/ @settings/frame-rate 2)) 
+ (if (> (state :cur-frame-no) (/ @(settings/data :frame-rate) 2)) 
    "|"
    ""))
 
@@ -21,17 +21,17 @@
 
    ;;position
    15                             
-   (- @settings/height 30)))     
+   (- @(settings/dat :height) 30)))     
 
 (defn ready-to-accept-new-key? [state key]
   (let [frames-since-last-press
         (get-in state [:keyboard-state :frames-since-last-press])]
     (and (q/key-pressed?)
          (> frames-since-last-press
-            (* @settings/frame-rate (/ key-delay-in-ms 1000)))
+            (* @(settings/data :frame-rate) (/ key-delay-in-ms 1000)))
          (or (not (= (get-in state [:keyboard-state :prev-key]) key))
              (> frames-since-last-press 
-                (* @settings/frame-rate
+                (* @(settings/data :frame-rate)
                    (/ double-tap-delay-in-ms 1000)))))))
 
 

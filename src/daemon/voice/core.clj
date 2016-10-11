@@ -14,14 +14,14 @@
   :done)
 
 (defn is-speaking []
-  (case settings/voice-engine
+  (case (settings/data :voice-engine)
     :watson (not @watson/finished)
     ;;Always false for mac since the api call will not return until speaking stops
     :mac false
     :default true))
 
 (defn speak [words]
-  (case settings/voice-engine
+  (case (settings/data :voice-engine)
     :watson    (watson/speak words)
     :cerevoice (cerevoice-speak words)
     :mac       (mac-speak words)

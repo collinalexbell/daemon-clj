@@ -7,7 +7,7 @@
   "Returns a map with the loaded sprite files that were loaded using quill.core/image-load"
   [emotion-key]
   ;;If the emotion exists
-  (if-let [emotion-folder (str settings/face-animation-folder "/" (name emotion-key))]
+  (if-let [emotion-folder (str (settings/data :face-animation-folder) "/" (name emotion-key))]
     (map 
      #(q/load-image (str emotion-folder "/" %))
      ;;vector of image paths in emotion-folder

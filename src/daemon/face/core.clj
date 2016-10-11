@@ -19,13 +19,13 @@
 (import 'java.nio.ByteOrder)
 
 
-(def restore-width (atom settings/width))
-(def restore-height (atom settings/height))
+(def restore-width (atom (settings/data :width)))
+(def restore-height (atom (settings/data :height)))
 (def emot-buffer (atom :happy))
-(def old-drawn-smart-mat (ref (smart-atom/create (Mat. @settings/width @settings/height CvType/CV_8UC3))))
+(def old-drawn-smart-mat (ref (smart-atom/create (Mat. @(settings/data :width) @(settings/data :height) CvType/CV_8UC3))))
 (def transitioner (ref nil))
 (def draw-mat? (ref false))
-(def smart-mat-to-draw (ref (smart-atom/create (Mat. @settings/width @settings/height CvType/CV_8UC3))))
+(def smart-mat-to-draw (ref (smart-atom/create (Mat. @(settings/data :width) @(settings/data :height) CvType/CV_8UC3))))
 (def in-main-loop? (ref false))
 (def cur-emotion (ref nil))
 
@@ -59,7 +59,7 @@
     (filter
      #(not (.isFile %))
      ;;all folders and files
-     (.listFiles (clojure.java.io/file settings/face-animation-folder)))))
+     (.listFiles (clojure.java.io/file (settings/data :face-animation-folder))))))
 
 (defn load-emotions []
   (apply merge (map
@@ -68,7 +68,7 @@
 
 (defn setup []
   (q/image-mode :center)
-  (q/frame-rate settings/animation-frame-rate)
+  (q/frame-rate (settings/data :animation-frame-rate))
   (q/background 255)
   (let [animations (load-emotions)]
     (dosync (ref-set cur-emotion :happy))
@@ -76,9 +76,9 @@
 
 
 (defn update-state [state]
-  (q/frame-rate @settings/frame-rate)
+  (q/frame-rate @(settings/data :frame-rate))
   (->
-   (let [every-x-frame (/ @settings/frame-rate settings/animation-frame-rate)]
+   (let [every-x-frame (/ @(settings/data :frame-rate) (settings/data :animation-frame-rate))]
      (if (= (mod (state :cur-frame-no) every-x-frame) 0)
       (if (not (nil? @transitioner))
        ;;transition
@@ -95,7 +95,7 @@
                  (animation/next-frame (get-in state [:emotions (state :cur-emotion)]))))
       state))
    ;finally assoc in the cur-frame-no
-   (assoc :cur-frame-no (mod (+ 1 (state :cur-frame-no)) @settings/frame-rate))
+   (assoc :cur-frame-no (mod (+ 1 (state :cur-frame-no)) @(settings/data :frame-rate)))
    (repl/keypress-handler)
    ;;uncomment to clear repl for debugging
    ;;(assoc :repl-text "")
@@ -131,7 +131,7 @@
   (try
     (let [new-smart-mat-to-draw
          (if (= (.size (smart-atom/deref smart-mat))
-                (Size. @settings/width @settings/height))
+                (Size. @(settings/data :width) @(settings/data :height)))
            ;return a copy of the smart mat if no changes need to be made to the mat
            (smart-atom/copy smart-mat)
            ;;if changes do need to be made, the smart mat must be deep-cloned to get a brand new matrix
@@ -140,7 +140,7 @@
              (Imgproc/resize
                 (smart-atom/deref new-smart-mat)
                 (smart-atom/deref new-smart-mat)
-                (Size. @settings/width @settings/height))
+                (Size. @(settings/data :width) @(settings/data :height)))
              new-smart-mat))]
       ;;decrement the smart mat reference counter
       (smart-atom/delete smart-mat)
@@ -153,14 +153,14 @@
 
 (defn activate-mat-display []
   (dosync (ref-set draw-mat? true)
-          (ref-set @settings/frame-rate 30)))
+          (ref-set @(settings/data :frame-rate) 30)))
 
 (defn deactivate-mat-display []
   (dosync (ref-set draw-mat? false)))
 
 (defn calculate-image-numbers []
-  (let [w-ratio (/ @settings/width settings/face-image-width)
-        h-ratio (/ @settings/height settings/face-image-height)
+  (let [w-ratio (/ @(settings/data :width) (settings/data :face-image-width))
+        h-ratio (/ @(settings/data :height) (settings/data :face-image-height))
         ratio-dim (if (<= w-ratio  h-ratio) :w :h)
         ratio (min w-ratio h-ratio)
         zoom
@@ -177,7 +177,7 @@
             (+ 1.1 (/ 0.015 ratio))
             (/ 1.0 ratio)))]
 
-    [(int (/ @settings/width 2))
+    [(int (/ @(settings/data :width) 2))
      (int (- (/ (* 600 ratio zoom) 2) (if (<= ratio 1) (* 38 ratio) (* 25)) ))
      (int (* 1024 zoom ratio))
      (int (* 600 zoom ratio))]))
@@ -189,8 +189,8 @@
       (draw-mat @smart-mat-to-draw))
   (apply q/image (animation/get-cur-frame (get-in state [:emotions (state :cur-emotion)]))  (calculate-image-numbers))
   (if (<= 0.1
-         (- (/ @settings/height settings/face-image-height)
-            (/ @settings/width settings/face-image-width)))
+         (- (/ @(settings/data :height) (settings/data :face-image-height))
+            (/ @(settings/data :width) (settings/data :face-image-width))))
     (repl/display state))
   (q/fill 255))
 
@@ -199,7 +199,7 @@
 
 (defn create []
  (q/defsketch daemon-face
-   :size [@settings/width @settings/height]
+   :size [@(settings/data :width) @(settings/data :height)]
    :features [:resizeable :no-safe-fns :keep-on-top]
    :setup setup
    :update update-state
@@ -229,14 +229,14 @@
 
 (defn resize [sketch width height]
   (dosync
-   (ref-set settings/width width)
-   (ref-set settings/height height))
+   (ref-set (settings/data :width) width)
+   (ref-set (settings/data :height) height))
    (.setSize (.frame sketch) width height))
 
 (defn maximize [sketch]
   ;;Cache the old dims for "restore"
-  (swap! restore-width (constantly @settings/width))
-  (swap! restore-height (constantly @settings/height))
+  (swap! restore-width (constantly @(settings/data :width)))
+  (swap! restore-height (constantly @(settings/data :height)))
   (let [dim (-> (Toolkit/getDefaultToolkit) (.getScreenSize))]
     (resize sketch (.width dim) (- (.height dim) 50))))
 

@@ -21,7 +21,7 @@
 
    ;;position
    15                             
-   (- @(settings/dat :height) 30)))     
+   (- @(settings/data :height) 30)))     
 
 (defn ready-to-accept-new-key? [state key]
   (let [frames-since-last-press

@@ -1,6 +1,0 @@
-
-*** Design - is the creation of a plan or convention for the construction of an object, system or measurable human interactio
-**** Objects of design: architectural blueprints, engineering drawings, business processes, circuit diagrams, and sewing patterns
-**** Time spent in: research, thought, modeling, interactive adjustment, and redesign
-**** Meta designing is a thing
-**** object built by agent to accomplish goals in an environment using components and satsifies requirements and subject to *constraints*

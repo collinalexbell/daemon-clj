@@ -237,4 +237,7 @@ API so that users can create their own applications
 *** Having a 5 second listening time is too long.
 *** Make a macro that can generate the listener code for the twitter listener
 
+* Kickstarter Launch #2
+** Mission: 
+*** Engineer an AI friend.
 		

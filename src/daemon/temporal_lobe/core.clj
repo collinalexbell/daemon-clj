@@ -119,6 +119,25 @@
    that-says "You have finished your meditation!")
   (voice/speak "Starting meditation"))
 
+(def status-asker-thread (atom nil))
+(defn ask-what-im-doing
+  "Ask me what I am doing every fq minutes"
+  [fq]
+  (swap!
+   status-asker-thread
+   (fn
+     [ignore]
+     (at-at/every
+      (* 1000 60 fq)
+      #(do
+         (set-cur-conversation :status)
+         (voice/speak "Ok. What is up?"))
+      interrupt/interrupts))))
+
+(defn stop-asking-what-im-doing []
+  (if (not (nil? @status-asker-thread))
+   (at-at/stop @status-asker-thread)))
+
 (defn act-on-speech
   "Recieves raw speech, preprocesses it, and then passes signals on accordingly (or calls funcitons)
   Speech is stored in (cur-state :data)"

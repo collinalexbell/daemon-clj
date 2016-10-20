@@ -122,13 +122,13 @@
 (def status-asker-thread (atom nil))
 (defn ask-what-im-doing
   "Ask me what I am doing every fq minutes"
-  [fq]
+  [fq-in-mins]
   (swap!
    status-asker-thread
    (fn
      [ignore]
      (at-at/every
-      (* 1000 60 fq)
+      (* 1000 60 fq-in-mins)
       #(do
          (set-cur-conversation :status)
          (voice/speak "Ok. What is up?"))

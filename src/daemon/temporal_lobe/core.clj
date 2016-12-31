@@ -120,8 +120,9 @@
   (voice/speak "Starting meditation"))
 
 (def status-asker-thread (atom nil))
-(defn ask-what-im-doing
-  "Ask me what I am doing every fq minutes"
+(defn ask-what-you-are-doing
+  "action: I can ask you what you are doing every so often
+   parameters: frequency-in-minutes"
   [fq-in-mins]
   (swap!
    status-asker-thread
@@ -185,4 +186,54 @@
       (wiki/search
        (clojure.string/replace
         speech #"search wikipedia for" ""))))))
+
+
+(def encouragements
+  ["Keep Going"
+   "Do not stop"
+   "You only live once"
+   "Live the best life you can"])
+
+(defn encourage-you
+  "action: I can encourage you
+   parameters: none"
+  []
+  (rand-nth encouragements))
+
+(def speech-net {:programming ["I like to program"]})
+
+(defn select-speech-net [subj]
+  (rand-nth (speech-net subj)))
+
+(defn talk-about
+  "action: I can share my thoughts about specific subjects
+   parameters: subject"
+  [subject]
+  (select-speech-net subject))
+
+(def what-i-can-do
+  {"temporal-lobe/greet" "I can greet you"
+   "temporal-lobe/encourage-you" "I can encourage you"})
+
+(defn tell-me-what-you-can-do []
+  (apply
+   str
+   (map
+    #(str (second %) " with " (first %) ".\n")
+    what-i-can-do)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

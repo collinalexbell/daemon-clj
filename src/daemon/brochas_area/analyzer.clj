@@ -23,9 +23,30 @@
                             demo-recording)))
              50000 55000)))
 
+(defn view-audio-plot [audio-data start-index stop-index]
+  (-> (xy-plot
+       (range)
+       (subvec
+        (into [] (take 650000
+                       (map
+                        #(- (bit-and (int %) 0xff) 0x7f)
+                        audio-data)))
+        start-index stop-index))
+      (view)))
+
 (count demo-recording)
 
 (set-point-size plot 1)
 (view plot)
+
+
+
+
+
+
+
+
+
+
 
 

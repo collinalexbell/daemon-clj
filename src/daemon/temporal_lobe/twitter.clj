@@ -46,7 +46,10 @@
       (.getInstance)))
 
 (defn tweet [the-tweet]
-  (.updateStatus t (StatusUpdate. the-tweet)))
+  (.updateStatus t (StatusUpdate.
+                    (if (<= (count the-tweet) 126)
+                      (str the-tweet "~sent by my AI.")
+                      the-tweet))))
 
 
 

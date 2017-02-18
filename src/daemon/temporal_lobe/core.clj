@@ -100,8 +100,9 @@
   (clojure.string/split (slurp "resources/meditation.edn") #"\n"))
 
 (defn meditate
-  "Takes meditations as lines and total time to meditate in form ss or mm:ss or hh:mm:ss
-  Daemon will read each meditation mantra at evenly spaced times to take up the total meditation tim"
+  "action: I will guide you through your meditation
+   parameters: total-time-to-meditate & what to meditate on
+  "
   [total-time-to-meditate meditations]
   (run!
    #(interrupt/fire-interrupt*

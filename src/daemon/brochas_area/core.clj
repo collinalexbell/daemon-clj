@@ -28,8 +28,8 @@
 (defn request-new-access-token []
   (let [options
         {:form-params {:grant_type "client_credentials" 
-                        :client_id "71ee3462a7574c428a365a43bd4ce0c4" 
-                        :client_secret "71ee3462a7574c428a365a43bd4ce0c4" 
+                        :client_id "REPLACE_ME" 
+                        :client_secret "REPLACE_ME" 
                         :scope "https://speech.platform.bing.com"}
          :headers {"Content-type" "application/x-www-form-urlencoded"}}]
     (http/post "https://oxford-speech.cloudapp.net/token/issueToken" options)))

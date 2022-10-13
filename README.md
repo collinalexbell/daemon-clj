@@ -1,4 +1,4 @@
-# The daemeon project: An open source AI companion
+# The daemeon project: Open source software for artificial life
 
 ## Mission Statement: Engineer an Artificially Intelligent Friend.
 
